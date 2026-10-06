@@ -52,6 +52,15 @@
     font-size: 14px;
     font-weight: 600;
     color: #f5d742;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .top-balance.vip {
+    background: linear-gradient(135deg, #f59e0b, #f5d742);
+    color: #1a1a2e;
+    border: none;
   }
 
   .content {
@@ -111,6 +120,13 @@
     font-weight: 700;
   }
 
+  .btn-vip {
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: #fff;
+    border: none;
+    font-weight: 700;
+  }
+
   .btn-danger { background: linear-gradient(135deg, #b91c1c, #dc2626); border: none; }
   .btn-success { background: linear-gradient(135deg, #15803d, #22c55e); border: none; }
 
@@ -121,7 +137,7 @@
     margin-top: 8px;
   }
 
-  /* ============ ГОРИЗОНТАЛЬНАЯ ЛЕНТА КНОПОК ============ */
+  /* ============ ГОРИЗОНТАЛЬНАЯ ЛЕНТА ============ */
   .menu-grid {
     display: flex;
     gap: 8px;
@@ -242,6 +258,11 @@
     margin-bottom: 15px;
   }
 
+  .profile-card.vip {
+    border: 2px solid #f5d742;
+    box-shadow: 0 0 20px rgba(245, 217, 66, 0.3);
+  }
+
   .profile-row {
     display: flex;
     justify-content: space-between;
@@ -289,6 +310,11 @@
     padding: 12px 15px;
     margin-bottom: 8px;
     font-size: 14px;
+  }
+
+  .top-item.vip {
+    background: linear-gradient(135deg, #2a2a4a, #3d2d5c);
+    border-color: #a855f7;
   }
 
   .top-item .place { font-weight: 700; color: #f5d742; min-width: 30px; }
@@ -380,7 +406,7 @@
     text-align: center;
   }
 
-  .modal-content input, .modal-content textarea {
+  .modal-content input {
     width: 100%;
     background: #0f0f1a;
     border: 1px solid #3d3d5c;
@@ -390,12 +416,6 @@
     font-size: 16px;
     outline: none;
     margin-bottom: 12px;
-    font-family: inherit;
-  }
-
-  .modal-content textarea {
-    min-height: 100px;
-    resize: vertical;
   }
 
   .toast {
@@ -458,6 +478,7 @@
   .role-owner { background: #f5d742; color: #1a1a2e; }
   .role-admin { background: #3b82f6; color: #fff; }
   .role-user { background: #3d3d5c; color: #aaa; }
+  .role-vip { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; }
 </style>
 </head>
 <body>
@@ -469,6 +490,7 @@
 
 <div class="content" id="content">
 
+  <!-- ГЛАВНОЕ МЕНЮ -->
   <div class="screen active" id="screenMenu">
     <div class="screen-title">🎲 Игры</div>
     <div class="menu-grid">
@@ -482,6 +504,15 @@
       <button class="btn" onclick="openGame('duel')">⚔️ Дуэль</button>
     </div>
 
+    <div class="menu-grid">
+      <button class="btn btn-vip" onclick="openVip()">💎 Купить VIP — 5000 ⭐</button>
+      <button class="btn" onclick="switchTo('screenGift')">⭐ Подарить звёзды</button>
+      <button class="btn btn-gold" onclick="switchTo('screenPromo')">🎁 Промокод</button>
+      <button class="btn" onclick="switchTo('screenTop')">🏆 Топ-10</button>
+      <button class="btn" onclick="switchTo('screenHistory')">📜 История</button>
+      <button class="btn" onclick="switchTo('screenLookup')">🔍 Чужой профиль</button>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card">Сыграно<span id="statGames">0</span></div>
       <div class="stat-card">Побед<span id="statWins">0</span></div>
@@ -489,6 +520,7 @@
     </div>
   </div>
 
+  <!-- ИГРА -->
   <div class="screen" id="screenGame">
     <div class="screen-title" id="gameTitle">Игра</div>
     <div class="dice-display" id="diceDisplay">
@@ -511,11 +543,33 @@
     <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
   </div>
 
+  <!-- ПРОФИЛЬ -->
   <div class="screen" id="screenProfile">
     <div class="screen-title">👤 Мой профиль</div>
     <div class="profile-card" id="myProfileCard"></div>
+
+    <div class="menu-grid">
+      <button class="btn" onclick="switchTo('screenHistory')">📜 История</button>
+      <button class="btn" onclick="switchTo('screenTop')">🏆 Топ-10</button>
+    </div>
   </div>
 
+  <!-- VIP -->
+  <div class="screen" id="screenVip">
+    <div class="screen-title">💎 VIP-статус</div>
+    <div class="profile-card">
+      <div class="profile-row"><span class="label">Лимит ставки</span><span class="value">50% от баланса</span></div>
+      <div class="profile-row"><span class="label">Бонус к выплате</span><span class="value">+5%</span></div>
+      <div class="profile-row"><span class="label">Чужой профиль</span><span class="value">Бесплатно</span></div>
+      <div class="profile-row"><span class="label">Ежедневный бонус</span><span class="value">×2</span></div>
+      <div class="profile-row"><span class="label">Значок 💎</span><span class="value">Да</span></div>
+    </div>
+    <div id="vipStatus"></div>
+    <button class="btn btn-vip btn-full" onclick="buyVip()">💎 Купить VIP за 5000 ⭐</button>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
+  </div>
+
+  <!-- ЧУЖОЙ ПРОФИЛЬ -->
   <div class="screen" id="screenLookup">
     <div class="screen-title">🔍 Чужой профиль</div>
     <div class="input-group">
@@ -524,8 +578,10 @@
     </div>
     <button class="btn btn-gold btn-full" onclick="lookupProfile()">🔍 Найти (400 ⭐)</button>
     <div id="lookupResult" style="margin-top:15px;"></div>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
   </div>
 
+  <!-- ПОПОЛНЕНИЕ -->
   <div class="screen" id="screenTopUp">
     <div class="screen-title">💳 Пополнение</div>
     <p style="text-align:center;color:#8888aa;font-size:13px;margin-bottom:15px;">
@@ -545,6 +601,7 @@
     <div id="topUpResult" style="margin-top:15px;"></div>
   </div>
 
+  <!-- ВЫВОД -->
   <div class="screen" id="screenWithdraw">
     <div class="screen-title">💸 Вывод</div>
     <p style="text-align:center;color:#8888aa;font-size:13px;margin-bottom:15px;">
@@ -556,8 +613,10 @@
     </div>
     <button class="btn btn-gold btn-full" onclick="doWithdraw()">💸 Отправить заявку</button>
     <div id="withdrawResult" style="margin-top:15px;"></div>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
   </div>
 
+  <!-- ПРОМОКОДЫ -->
   <div class="screen" id="screenPromo">
     <div class="screen-title">🎁 Промокоды</div>
     <div class="input-group">
@@ -565,18 +624,41 @@
       <input type="text" id="promoInput" placeholder="Например HELLO2026">
     </div>
     <button class="btn btn-gold btn-full" onclick="activatePromo()">🎁 Активировать</button>
+    <div id="promoResult" style="margin-top:15px;"></div>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
   </div>
 
+  <!-- ПОДАРОК ЗВЁЗД -->
+  <div class="screen" id="screenGift">
+    <div class="screen-title">⭐ Подарить звёзды</div>
+    <div class="input-group">
+      <label>@username или ID получателя</label>
+      <input type="text" id="giftUser" placeholder="@username или ID">
+    </div>
+    <div class="input-group">
+      <label>Сумма подарка</label>
+      <input type="number" id="giftAmount" placeholder="Например 100" min="10" inputmode="numeric">
+    </div>
+    <button class="btn btn-gold btn-full" onclick="doGift()">⭐ Подарить</button>
+    <div id="giftResult" style="margin-top:15px;"></div>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
+  </div>
+
+  <!-- ТОП-10 -->
   <div class="screen" id="screenTop">
     <div class="screen-title">🏆 Топ-10 по балансу</div>
     <div id="topList"></div>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
   </div>
 
+  <!-- ИСТОРИЯ -->
   <div class="screen" id="screenHistory">
     <div class="screen-title">📜 История игр</div>
     <div id="historyList"></div>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
   </div>
 
+  <!-- АДМИН -->
   <div class="screen" id="screenAdmin">
     <div class="screen-title">🛡 Админ-панель</div>
     <div class="menu-grid" style="flex-direction: column;">
@@ -593,6 +675,7 @@
     <div id="adminResult" style="margin-top:15px;"></div>
   </div>
 
+  <!-- ВЛАДЕЛЕЦ -->
   <div class="screen" id="screenOwner">
     <div class="screen-title">👑 Панель владельца</div>
     <div class="menu-grid" style="flex-direction: column;">
@@ -606,6 +689,7 @@
 
 </div>
 
+<!-- ТАБ-БАР -->
 <div class="tab-bar" id="tabBar">
   <button class="tab active" data-screen="screenMenu" onclick="switchTo('screenMenu')">
     <span class="tab-icon">🎲</span>
@@ -619,6 +703,10 @@
     <span class="tab-icon">💳</span>
     <span>Пополнить</span>
   </button>
+  <button class="tab" data-screen="screenVip" onclick="switchTo('screenVip')">
+    <span class="tab-icon">💎</span>
+    <span>VIP</span>
+  </button>
   <button class="tab hidden" id="tabAdmin" data-screen="screenAdmin" onclick="switchTo('screenAdmin')">
     <span class="tab-icon">🛡</span>
     <span>Админ</span>
@@ -629,6 +717,7 @@
   </button>
 </div>
 
+<!-- МОДАЛКА ВВОДА -->
 <div class="modal" id="modalInput">
   <div class="modal-content">
     <h2 id="modalTitle">Ввод</h2>
@@ -639,6 +728,7 @@
   </div>
 </div>
 
+<!-- МОДАЛКА ИНФО -->
 <div class="modal" id="modalInfo">
   <div class="modal-content">
     <h2 id="infoTitle">Инфо</h2>
@@ -654,6 +744,15 @@
 // АДРЕС API БОТА — ЗАМЕНИ НА СВОЙ
 // ============================================================
 const API_URL = "http://127.0.0.1:8080";
+
+// ============================================================
+// VIP ПАРАМЕТРЫ
+// ============================================================
+const VIP_PRICE = 5000;
+const VIP_BONUS = 0.05;         // +5% к выплате
+const VIP_BET_PERCENT = 0.50;   // 50% от баланса
+const REGULAR_BET_PERCENT = 0.25;
+const LOOKUP_PRICE = 400;
 
 let currentRole = 'user';
 let OWNER_IDS_LOCAL = [];
@@ -682,6 +781,8 @@ const state = {
   selectedChoice: null,
   isPlaying: false,
   username: null,
+  isVip: false,
+  lastDaily: null,
 };
 
 const allUsers = {};
@@ -722,6 +823,7 @@ function save() {
     losses: state.losses,
     history: state.history.slice(0, 30),
     username: state.username,
+    isVip: state.isVip,
   }));
 }
 
@@ -736,6 +838,7 @@ function load() {
       state.losses = d.losses ?? 0;
       state.history = d.history ?? [];
       state.username = d.username ?? null;
+      state.isVip = d.isVip ?? false;
     } catch (e) { console.error(e); }
   }
   updateUI();
@@ -774,6 +877,7 @@ function switchTo(screenId) {
   if (screenId === 'screenProfile') renderMyProfile();
   if (screenId === 'screenTop') renderTop();
   if (screenId === 'screenHistory') renderHistory();
+  if (screenId === 'screenVip') renderVipStatus();
 }
 
 // ============================================================
@@ -782,6 +886,13 @@ function switchTo(screenId) {
 function renderMyProfile() {
   const card = document.getElementById('myProfileCard');
   const username = state.username || ('id' + currentUserId);
+  const vipClass = state.isVip ? 'profile-card vip' : 'profile-card';
+  card.className = vipClass;
+
+  const vipLine = state.isVip
+    ? '<div class="profile-row"><span class="label">Статус</span><span class="value">💎 VIP</span></div>'
+    : '';
+
   card.innerHTML = `
     <div class="profile-row"><span class="label">Юз</span><span class="value">@${username}</span></div>
     <div class="profile-row"><span class="label">Баланс</span><span class="value">${state.balance} ⭐</span></div>
@@ -790,6 +901,7 @@ function renderMyProfile() {
     <div class="profile-row"><span class="label">Проигрышей</span><span class="value">${state.losses}</span></div>
     <div class="profile-row"><span class="label">ID</span><span class="value">${currentUserId}</span></div>
     <div class="profile-row"><span class="label">Роль</span><span class="value">${roleBadge(currentRole)}</span></div>
+    ${vipLine}
   `;
 }
 
@@ -821,24 +933,60 @@ function lookupProfile() {
     return;
   }
 
-  if (!isStaff(currentRole)) {
-    if (state.balance < 400) {
-      res.innerHTML = '<div class="result lose">❌ Нужно 400 ⭐ для просмотра чужого профиля.</div>';
+  if (!isStaff(currentRole) && !state.isVip) {
+    if (state.balance < LOOKUP_PRICE) {
+      res.innerHTML = `<div class="result lose">❌ Нужно ${LOOKUP_PRICE} ⭐ для просмотра чужого профиля.</div>`;
       return;
     }
-    state.balance -= 400;
+    state.balance -= LOOKUP_PRICE;
     updateUI();
   }
 
   const u = allUsers[targetId];
+  const priceText = (isStaff(currentRole) || state.isVip) ? '0 ⭐ (бесплатно)' : `${LOOKUP_PRICE} ⭐`;
   res.innerHTML = `
     <div class="profile-card">
       <div class="profile-row"><span class="label">Юз</span><span class="value">@${u.username}</span></div>
       <div class="profile-row"><span class="label">Баланс</span><span class="value">${u.balance} ⭐</span></div>
       <div class="profile-row"><span class="label">ID</span><span class="value">${targetId}</span></div>
-      <div class="profile-row"><span class="label">Списано</span><span class="value">${isStaff(currentRole) ? '0 ⭐ (персонал)' : '400 ⭐'}</span></div>
+      <div class="profile-row"><span class="label">Списано</span><span class="value">${priceText}</span></div>
     </div>
   `;
+}
+
+// ============================================================
+// VIP
+// ============================================================
+function openVip() {
+  switchTo('screenVip');
+}
+
+function renderVipStatus() {
+  const el = document.getElementById('vipStatus');
+  if (state.isVip) {
+    el.innerHTML = '<div class="result win">✅ У тебя активен VIP-статус!</div>';
+    document.querySelector('#screenVip .btn-vip').textContent = '💎 VIP уже куплен';
+    document.querySelector('#screenVip .btn-vip').disabled = true;
+  } else {
+    el.innerHTML = '<div class="result draw">💎 Купи VIP, чтобы получить все бонусы</div>';
+  }
+}
+
+function buyVip() {
+  if (state.isVip) {
+    showToast('💎 У тебя уже VIP', 'error');
+    return;
+  }
+  if (state.balance < VIP_PRICE) {
+    showToast(`❌ Нужно ${VIP_PRICE} ⭐`, 'error');
+    return;
+  }
+  state.balance -= VIP_PRICE;
+  state.isVip = true;
+  updateUI();
+  renderVipStatus();
+  renderMyProfile();
+  showToast('💎 VIP активирован!', 'success');
 }
 
 // ============================================================
@@ -887,9 +1035,6 @@ function selectChoice(c) {
   document.getElementById('choiceB').classList.toggle('selected', c === 'B');
 }
 
-// ============================================================
-// АНИМАЦИЯ КУБИКА С ЗАМЕДЛЕНИЕМ
-// ============================================================
 function animateDice(callback, duration = 2000) {
   const dice = document.getElementById('diceDisplay');
   let startTime = Date.now();
@@ -916,9 +1061,6 @@ function animateDice(callback, duration = 2000) {
   requestAnimationFrame(frame);
 }
 
-// ============================================================
-// ИГРА
-// ============================================================
 function play() {
   if (!state.currentGame || state.isPlaying) return;
 
@@ -952,9 +1094,10 @@ function play() {
 
       let type, text;
       if (p > b) {
-        state.balance += bet; state.wins++;
+        const payout = state.isVip ? Math.floor(bet * (1 + VIP_BONUS)) : bet;
+        state.balance += payout; state.wins++;
         type = 'win';
-        text = `✅ <b>Победа!</b><br>🧑 ${p} vs 🤖 ${b}<br>+${bet} ⭐`;
+        text = `✅ <b>Победа!</b><br>🧑 ${p} vs 🤖 ${b}<br>+${payout} ⭐${state.isVip ? ' 💎' : ''}`;
       } else if (p < b) {
         state.balance -= bet; state.losses++;
         type = 'lose';
@@ -1011,11 +1154,12 @@ function play() {
       type = 'draw';
       text = `🤝 <b>Ничья!</b><br>Выпало: <b>${result}</b> (ровно 3)<br>Ставка возвращена`;
     } else if (win) {
-      state.balance += bet; state.wins++;
+      const payout = state.isVip ? Math.floor(bet * (1 + VIP_BONUS)) : bet;
+      state.balance += payout; state.wins++;
       type = 'win';
       text = g.hasChoice
-        ? `✅ <b>Победа!</b><br>Ты: ${label}, выпало: <b>${result}</b><br>+${bet} ⭐`
-        : `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${bet} ⭐`;
+        ? `✅ <b>Победа!</b><br>Ты: ${label}, выпало: <b>${result}</b><br>+${payout} ⭐${state.isVip ? ' 💎' : ''}`
+        : `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${payout} ⭐${state.isVip ? ' 💎' : ''}`;
     } else {
       state.balance -= bet; state.losses++;
       type = 'lose';
@@ -1052,7 +1196,7 @@ function addHistory(name, bet, type) {
 }
 
 // ============================================================
-// ПОПОЛНЕНИЕ ЧЕРЕЗ TELEGRAM STARS
+// ПОПОЛНЕНИЕ
 // ============================================================
 function buyPackage(amount) {
   const res = document.getElementById('topUpResult');
@@ -1118,16 +1262,75 @@ function doWithdraw() {
 // ============================================================
 function activatePromo() {
   const code = document.getElementById('promoInput').value.trim().toUpperCase();
-  if (!code) { showToast('❌ Введи промокод', 'error'); return; }
+  const res = document.getElementById('promoResult');
+  if (!code) {
+    res.innerHTML = '<div class="result lose">❌ Введи промокод</div>';
+    return;
+  }
   const promo = promos[code];
-  if (!promo) { showToast('❌ Промокод не найден', 'error'); return; }
-  if (promo.uses <= 0) { showToast('❌ Промокод исчерпан', 'error'); return; }
+  if (!promo) {
+    res.innerHTML = '<div class="result lose">❌ Промокод не найден</div>';
+    return;
+  }
+  if (promo.uses <= 0) {
+    res.innerHTML = '<div class="result lose">❌ Промокод исчерпан</div>';
+    return;
+  }
 
   promo.uses--;
   state.balance += promo.amount;
   updateUI();
   document.getElementById('promoInput').value = '';
+  res.innerHTML = `<div class="result win">✅ Активирован! +${promo.amount} ⭐</div>`;
   showToast(`✅ +${promo.amount} ⭐`, 'success');
+}
+
+// ============================================================
+// ПОДАРОК ЗВЁЗД
+// ============================================================
+function doGift() {
+  const targetRaw = document.getElementById('giftUser').value.trim().replace('@', '');
+  const amount = parseInt(document.getElementById('giftAmount').value);
+  const res = document.getElementById('giftResult');
+
+  if (!targetRaw || !amount) {
+    res.innerHTML = '<div class="result lose">❌ Заполни все поля</div>';
+    return;
+  }
+  if (amount < 10) {
+    res.innerHTML = '<div class="result lose">❌ Минимум 10 ⭐</div>';
+    return;
+  }
+  if (amount > state.balance) {
+    res.innerHTML = '<div class="result lose">❌ Недостаточно средств</div>';
+    return;
+  }
+
+  let targetId = null;
+  if (/^\d+$/.test(targetRaw)) {
+    if (allUsers[targetRaw]) targetId = targetRaw;
+  } else {
+    for (const id in allUsers) {
+      if (allUsers[id].username === targetRaw) { targetId = id; break; }
+    }
+  }
+
+  if (!targetId) {
+    res.innerHTML = '<div class="result lose">❌ Получатель не найден</div>';
+    return;
+  }
+  if (String(targetId) === String(currentUserId)) {
+    res.innerHTML = '<div class="result draw">🤔 Себе дарить нельзя</div>';
+    return;
+  }
+
+  state.balance -= amount;
+  allUsers[targetId].balance = (allUsers[targetId].balance || 0) + amount;
+  updateUI();
+  document.getElementById('giftUser').value = '';
+  document.getElementById('giftAmount').value = '';
+  res.innerHTML = `<div class="result win">✅ Подарено ${amount} ⭐ игроку @${allUsers[targetId].username}</div>`;
+  showToast(`✅ Подарено ${amount} ⭐`, 'success');
 }
 
 // ============================================================
@@ -1135,8 +1338,10 @@ function activatePromo() {
 // ============================================================
 function renderTop() {
   const list = document.getElementById('topList');
-  // Добавляем себя в список
-  allUsers[currentUserId] = { username: state.username || ('id' + currentUserId), balance: state.balance };
+  allUsers[currentUserId] = {
+    username: state.username || ('id' + currentUserId),
+    balance: state.balance,
+  };
 
   const players = Object.entries(allUsers)
     .map(([id, u]) => ({ id, ...u }))
@@ -1144,13 +1349,17 @@ function renderTop() {
     .slice(0, 10);
 
   const medals = ['🥇', '🥈', '🥉'];
-  list.innerHTML = players.map((p, i) => `
-    <div class="top-item">
-      <span class="place">${i < 3 ? medals[i] : (i + 1) + '.'}</span>
-      <span class="name">@${p.username}</span>
-      <span class="value">${p.balance} ⭐</span>
-    </div>
-  `).join('');
+  list.innerHTML = players.map((p, i) => {
+    const isMe = String(p.id) === String(currentUserId);
+    const vipIcon = (isMe && state.isVip) ? ' 💎' : '';
+    return `
+      <div class="top-item ${isMe ? 'vip' : ''}">
+        <span class="place">${i < 3 ? medals[i] : (i + 1) + '.'}</span>
+        <span class="name">@${p.username}${vipIcon}</span>
+        <span class="value">${p.balance} ⭐</span>
+      </div>
+    `;
+  }).join('');
 }
 
 // ============================================================
@@ -1175,14 +1384,11 @@ function renderHistory() {
 // ============================================================
 let modalCallback = null;
 
-function openModalInput(title, desc, placeholder, callback, isTextarea = false) {
+function openModalInput(title, desc, placeholder, callback) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalDesc').textContent = desc;
-
-  const field = document.getElementById('modalInputField');
-  field.value = '';
-  field.placeholder = placeholder;
-
+  document.getElementById('modalInputField').value = '';
+  document.getElementById('modalInputField').placeholder = placeholder;
   modalCallback = callback;
   document.getElementById('modalInput').classList.add('active');
 }
@@ -1209,7 +1415,7 @@ function closeInfo() {
 }
 
 // ============================================================
-// АДМИН-ПАНЕЛЬ
+// АДМИН
 // ============================================================
 function adminAddBalance() {
   if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
@@ -1269,9 +1475,11 @@ function adminBan() {
 function adminStats() {
   if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
   const total = Object.values(allUsers).reduce((s, u) => s + (u.balance || 0), 0);
+  const vips = Object.values(allUsers).filter(u => u.isVip).length;
   openInfo('📊 Статистика', `
     👥 Всего: <b>${Object.keys(allUsers).length}</b><br>
     💰 Общий баланс: <b>${total} ⭐</b><br>
+    💎 VIP: <b>${vips}</b><br>
     🎮 Игр сыграно: <b>${state.gamesPlayed}</b>
   `);
 }
@@ -1317,7 +1525,7 @@ function adminStaffList() {
 }
 
 // ============================================================
-// ПАНЕЛЬ ВЛАДЕЛЬЦА
+// ВЛАДЕЛЕЦ
 // ============================================================
 function ownerAddAdmin() {
   if (currentRole !== 'owner') { showToast('⛔ Только владелец', 'error'); return; }
@@ -1393,67 +1601,38 @@ async function init() {
   let userIdFromUrl = urlParams.get('user_id');
 
   if (tg) {
-    try {
-      tg.ready();
-      tg.expand();
-    } catch (e) { console.warn('tg.ready fail:', e); }
+    try { tg.ready(); tg.expand(); } catch (e) {}
   }
 
-  // Реальный юзер из WebApp
   let realUsername = null;
-
   if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
     const tgUser = tg.initDataUnsafe.user;
     realUsername = tgUser.username || tgUser.first_name || null;
-    if (!userIdFromUrl && tgUser.id) {
-      userIdFromUrl = tgUser.id;
-    }
+    if (!userIdFromUrl && tgUser.id) userIdFromUrl = tgUser.id;
   }
 
   if (!userIdFromUrl) {
     const saved = localStorage.getItem('casino_user_id');
     if (saved) userIdFromUrl = saved;
   }
-
-  if (!userIdFromUrl) {
-    userIdFromUrl = prompt('Введи свой ID:');
-  }
-
-  if (!userIdFromUrl) {
-    showToast('❌ Не удалось получить ID', 'error');
-    return;
-  }
+  if (!userIdFromUrl) userIdFromUrl = prompt('Введи свой ID:');
+  if (!userIdFromUrl) { showToast('❌ Не удалось получить ID', 'error'); return; }
 
   currentUserId = parseInt(userIdFromUrl);
   localStorage.setItem('casino_user_id', currentUserId);
 
-  // Если username не из Telegram — берём из localStorage
-  if (!realUsername) {
-    realUsername = state.username;
-  }
-  if (!realUsername) {
-    realUsername = 'id' + currentUserId;
-  }
+  if (!realUsername) realUsername = state.username;
+  if (!realUsername) realUsername = 'id' + currentUserId;
   state.username = realUsername;
 
-  console.log('ID игрока:', currentUserId, 'Username:', realUsername);
-
-  // Роль
   try {
     const res = await fetch(`${API_URL}/api/role?user_id=${currentUserId}`);
     const data = await res.json();
-    if (data.ok) {
-      currentRole = data.role;
-      console.log('Роль от бота:', currentRole);
-    } else {
-      currentRole = 'user';
-    }
+    currentRole = data.ok ? data.role : 'user';
   } catch (err) {
-    console.error('API недоступен:', err);
     currentRole = 'user';
   }
 
-  // Списки владельцев/админов
   try {
     const [ownersRes, adminsRes] = await Promise.all([
       fetch(`${API_URL}/api/owners`),
@@ -1463,18 +1642,14 @@ async function init() {
     const adminsData = await adminsRes.json();
     if (ownersData.ok) OWNER_IDS_LOCAL = ownersData.owners;
     if (adminsData.ok) ADMIN_IDS_LOCAL = adminsData.admins;
-  } catch (err) {
-    console.error('Не удалось загрузить списки:', err);
-  }
+  } catch (err) {}
 
-  // Регистрируемся в локальном списке
   if (!allUsers[currentUserId]) {
-    allUsers[currentUserId] = { username: realUsername, balance: 0 };
+    allUsers[currentUserId] = { username: realUsername, balance: 0, isVip: false };
   } else {
     allUsers[currentUserId].username = realUsername;
   }
 
-  // Показ вкладок
   if (currentRole === 'admin' || currentRole === 'owner') {
     document.getElementById('tabAdmin').classList.remove('hidden');
   }
@@ -1483,11 +1658,7 @@ async function init() {
   }
 
   load();
-
-  // Если в localStorage был старый баланс — оставляем, новый старт = 0
-  if (!localStorage.getItem('casino_state')) {
-    state.balance = 0;
-  }
+  if (!localStorage.getItem('casino_state')) state.balance = 0;
 
   updateUI();
   switchTo('screenMenu');
