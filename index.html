@@ -565,9 +565,10 @@
 
 <script>
 // ============================================================
-// 🔧 НАСТРОЙКИ — ЗАМЕНИ API_URL ПОСЛЕ ЗАПУСКА ТУННЕЛЯ
+// 🔧 НАСТРОЙКИ — ЗАМЕНИ ПОСЛЕ ЗАПУСКА ТУННЕЛЯ
 // ============================================================
 const API_URL = "https://YOUR-TUNNEL-URL.trycloudflare.com";  // <-- ЗАМЕНИ
+const BOT_USERNAME = "Kasikad_bot";  // <-- ЗАМЕНИ (без @)
 
 const CONFIG = {
   VIP_PRICE: 5000,
@@ -758,7 +759,6 @@ function getVipInv(uid) {
   return vipInventory[uid];
 }
 
-// Синхронизация с бэкендом
 async function syncToBackend() {
   const me = getUser(currentUserId);
   if (!me) return;
@@ -858,72 +858,37 @@ function renderMyProfile() {
 }
 
 // ============================================================
-// ⭐ ОПЛАТА ЗВЁЗДАМИ TELEGRAM
+// 💳 ПОПОЛНЕНИЕ — открывает бота с deep-link
 // ============================================================
 async function buyPackage(amount) {
-  if (!featuresEnabled.topup) { showToast('🔴 Функция отключена', 'error'); return; }
+  if (!featuresEnabled.topup) { showToast('🔴 Отключено', 'error'); return; }
   const res = document.getElementById('topUpResult');
-  res.innerHTML = '<div class="result draw">⏳ Создаём счёт...</div>';
+  res.innerHTML = '<div class="result draw">⏳ Открываем бота...</div>';
 
+  // Deep-link в бота: t.me/BotName?start=pay_50
+  const deepLink = `https://t.me/${BOT_USERNAME}?start=pay_${amount}`;
+  console.log('Deep link:', deepLink);
+
+  // Пробуем открыть в Telegram WebApp
   const tg = window.Telegram?.WebApp;
-  console.log('TG WebApp:', tg);
-  console.log('API_URL:', API_URL);
-
-  if (!tg) {
-    res.innerHTML = '<div class="result lose">❌ Telegram WebApp не загружен.<br>Открой через StaticGram/Telegram</div>';
-    return;
-  }
-
-  if (!tg.openInvoice) {
-    res.innerHTML = '<div class="result lose">❌ openInvoice недоступен. Обнови клиент.</div>';
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/api/invoice?user_id=${currentUserId}&amount=${amount}`);
-    const data = await response.json();
-    console.log('Invoice response:', data);
-
-    if (!data.ok || !data.invoice_link) {
-      res.innerHTML = `<div class="result lose">❌ ${data.error || 'Ошибка сервера'}</div>`;
+  if (tg && typeof tg.openTelegramLink === 'function') {
+    try {
+      tg.openTelegramLink(deepLink);
+      res.innerHTML = `<div class="result win">✅ Перешли в бота @${BOT_USERNAME}<br>Оплати ${amount} ⭐ и вернись</div>`;
+      showToast('✅ Открыли бота, оплати и вернись', 'success');
       return;
+    } catch (e) {
+      console.warn('openTelegramLink fail:', e);
     }
+  }
 
-    tg.openInvoice(data.invoice_link, async (status) => {
-      console.log('Invoice status:', status);
-      if (status === 'paid') {
-        // Ждём 2 сек и запрашиваем баланс с бэкенда
-        setTimeout(async () => {
-          try {
-            const r = await fetch(`${API_URL}/api/balance?user_id=${currentUserId}`);
-            const b = await r.json();
-            if (b.ok) {
-              const me = getUser(currentUserId);
-              me.balance = b.balance;
-              if (b.is_vip) me.is_vip = 1;
-              updateUI();
-            }
-          } catch (e) { console.error('Balance fetch fail:', e); }
-        }, 2000);
-
-        // Мгновенно показываем
-        const me = getUser(currentUserId);
-        me.balance += amount;
-        updateUI();
-
-        res.innerHTML = `<div class="result win">✅ Оплачено! +${amount} ⭐</div>`;
-        showToast(`✅ +${amount} ⭐`, 'success');
-      } else if (status === 'cancelled') {
-        res.innerHTML = '<div class="result lose">❌ Отменено</div>';
-      } else if (status === 'failed') {
-        res.innerHTML = '<div class="result lose">❌ Ошибка оплаты</div>';
-      } else {
-        res.innerHTML = '<div class="result draw">⏳ Ожидание...</div>';
-      }
-    });
-  } catch (err) {
-    console.error('Fetch error:', err);
-    res.innerHTML = `<div class="result lose">❌ Сервер недоступен.<br>${err.message}</div>`;
+  // Fallback — обычная ссылка
+  try {
+    window.open(deepLink, '_blank');
+    res.innerHTML = `<div class="result win">✅ Если бот не открылся —<br>перейди вручную: @${BOT_USERNAME}<br>и введи /pay ${amount}</div>`;
+    showToast('✅ Открыли бота, оплати и вернись', 'success');
+  } catch (e) {
+    res.innerHTML = `<div class="result lose">❌ Не удалось открыть бота.<br>Перейди вручную: @${BOT_USERNAME}<br>Команда: <b>/pay ${amount}</b></div>`;
   }
 }
 
@@ -1083,14 +1048,14 @@ function buyVipItem(id) {
 // ЧУЖОЙ ПРОФИЛЬ
 // ============================================================
 function lookupProfile() {
-  if (!featuresEnabled.lookup) { showToast('🔴 Функция отключена', 'error'); return; }
+  if (!featuresEnabled.lookup) { showToast('🔴 Отключено', 'error'); return; }
   const raw = document.getElementById('lookupInput').value.trim();
   if (!raw) { showToast('❌ Введи @username или ID', 'error'); return; }
   const targetId = findUserId(raw);
   const res = document.getElementById('lookupResult');
   const me = getUser(currentUserId);
   if (!targetId) {
-    res.innerHTML = '<div class="result lose">❌ Пользователь не найден. Звёзды не списаны.</div>';
+    res.innerHTML = '<div class="result lose">❌ Пользователь не найден</div>';
     return;
   }
   if (String(targetId) === String(currentUserId)) {
@@ -1299,15 +1264,11 @@ function play() {
       me.balance += payout; me.wins = (me.wins || 0) + 1; me.streak = (me.streak || 0) + 1;
       if ((me.streak || 0) > (me.best_streak || 0)) me.best_streak = me.streak;
       type = 'win';
-      text = g.hasChoice
-        ? `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${payout} ⭐`
-        : `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${payout} ⭐`;
+      text = `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${payout} ⭐`;
     } else {
       me.balance -= bet; me.losses = (me.losses || 0) + 1; me.streak = 0;
       type = 'lose';
-      text = g.hasChoice
-        ? `❌ <b>Проигрыш.</b><br>Выпало: <b>${result}</b><br>-${bet} ⭐`
-        : `❌ <b>Проигрыш.</b><br>Выпало: <b>${result}</b><br>-${bet} ⭐`;
+      text = `❌ <b>Проигрыш.</b><br>Выпало: <b>${result}</b><br>-${bet} ⭐`;
     }
     showResult(type, text);
     addHistory(`${g.emoji} ${g.name} (${result})`, bet, type);
@@ -1755,7 +1716,6 @@ async function init() {
 
   ensureUser(currentUserId, realUsername);
 
-  // Пытаемся получить роль и списки с бэкенда
   try {
     const [rRole, rOwn, rAdm, rBal] = await Promise.all([
       fetch(`${API_URL}/api/role?user_id=${currentUserId}`),
@@ -1784,7 +1744,7 @@ async function init() {
     }
     console.log('Backend OK. Role:', currentRole);
   } catch (e) {
-    console.warn('Backend offline, локальный режим:', e.message);
+    console.warn('Backend offline:', e.message);
     currentRole = 'user';
   }
 
