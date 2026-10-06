@@ -498,7 +498,6 @@
       <button class="btn btn-purple" onclick="adminResetStats()">🔄 Сброс стат</button>
       <button class="btn btn-blue" onclick="adminOnline()">🟢 Онлайн</button>
       <button class="btn btn-pink" onclick="adminSendMessage()">✉️ Сообщение</button>
-      <button class="btn btn-orange" onclick="adminLogs()">📋 Логи</button>
     </div>
     <div id="adminResult" style="margin-top:12px;"></div>
   </div>
@@ -511,14 +510,6 @@
       <button class="btn btn-danger" onclick="ownerRemoveAdmin()">➖ Удалить админа</button>
       <button class="btn btn-gold" onclick="ownerBroadcast()">📣 Рассылка</button>
       <button class="btn btn-blue" onclick="ownerStats()">📊 Статистика</button>
-      <button class="btn btn-purple" onclick="ownerAddOwner()">👑 Добавить владельца</button>
-      <button class="btn btn-danger" onclick="ownerRemoveOwner()">👑 Убрать владельца</button>
-      <button class="btn btn-orange" onclick="ownerMaintenance()">🛠 Тех. работы</button>
-      <button class="btn btn-teal" onclick="ownerSetLogs()">📋 Чат логов</button>
-      <button class="btn btn-pink" onclick="ownerResetAll()">💥 Глобальный сброс</button>
-      <button class="btn btn-gold" onclick="ownerExport()">📤 Экспорт БД</button>
-      <button class="btn btn-blue" onclick="ownerImport()">📥 Импорт БД</button>
-      <button class="btn btn-danger" onclick="ownerWipeHistory()">🗑 Очистить историю</button>
     </div>
     <div id="ownerResult" style="margin-top:12px;"></div>
   </div>
@@ -574,9 +565,9 @@
 
 <script>
 // ============================================================
-// КОНФИГ
+// 🔧 НАСТРОЙКИ — ЗАМЕНИ API_URL ПОСЛЕ ЗАПУСКА ТУННЕЛЯ
 // ============================================================
-const API_URL = "http://127.0.0.1:8080";  // <-- ЗАМЕНИ на URL твоего бэкенда
+const API_URL = "https://YOUR-TUNNEL-URL.trycloudflare.com";  // <-- ЗАМЕНИ
 
 const CONFIG = {
   VIP_PRICE: 5000,
@@ -585,7 +576,6 @@ const CONFIG = {
   VIP_WIN_BONUS: 0.05,
   LOOKUP_PRICE: 400,
   WIN_CHANCE: 0.30,
-  CHOICE_PAYOUT: 0.8,
 };
 
 let OWNER_IDS = [];
@@ -616,7 +606,6 @@ let featuresEnabled = {
 
 let withdrawals = [];
 let withdrawalIdCounter = 1;
-let logChatId = null;
 
 const VIP_SHOP = [
   { id: 'boost_10',    name: 'Буст выплаты +10%', desc: 'Одна игра +10% к выигрышу', price: 200 },
@@ -661,7 +650,6 @@ function saveAll() {
     localStorage.setItem('casino_games', JSON.stringify(gamesEnabled));
     localStorage.setItem('casino_features', JSON.stringify(featuresEnabled));
     localStorage.setItem('casino_withdrawals', JSON.stringify(withdrawals));
-    localStorage.setItem('casino_logchat', JSON.stringify(logChatId));
     localStorage.setItem('casino_vipinv', JSON.stringify(vipInventory));
     localStorage.setItem('casino_history_' + currentUserId, JSON.stringify(state.history.slice(0, 30)));
     localStorage.setItem('casino_user_id', currentUserId);
@@ -695,9 +683,6 @@ function loadAll() {
       withdrawalIdCounter = withdrawals.length ? Math.max(...withdrawals.map(x => x.id)) + 1 : 1;
     }
 
-    const lc = localStorage.getItem('casino_logchat');
-    if (lc) logChatId = JSON.parse(lc);
-
     const vi = localStorage.getItem('casino_vipinv');
     if (vi) vipInventory = JSON.parse(vi);
 
@@ -727,11 +712,8 @@ function ensureUser(id, username) {
       losses: 0,
       streak: 0,
       best_streak: 0,
-      big_bets: 0,
       is_vip: 0,
       is_banned: 0,
-      role: 'user',
-      has_deposited: 0,
       last_seen: new Date().toISOString(),
     };
   } else if (username && allUsers[id].username !== username) {
@@ -774,6 +756,30 @@ function findUserId(query) {
 function getVipInv(uid) {
   if (!vipInventory[uid]) vipInventory[uid] = {};
   return vipInventory[uid];
+}
+
+// Синхронизация с бэкендом
+async function syncToBackend() {
+  const me = getUser(currentUserId);
+  if (!me) return;
+  try {
+    await fetch(`${API_URL}/api/save_stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUserId,
+        balance: me.balance,
+        is_vip: !!me.is_vip,
+        stats: {
+          played: me.games_played || 0,
+          wins: me.wins || 0,
+          losses: me.losses || 0,
+          streak: me.streak || 0,
+          best_streak: me.best_streak || 0,
+        },
+      }),
+    });
+  } catch (e) { console.warn('sync fail', e); }
 }
 
 // ============================================================
@@ -852,7 +858,7 @@ function renderMyProfile() {
 }
 
 // ============================================================
-// ⭐⭐⭐ ОПЛАТА ЗВЁЗДАМИ TELEGRAM ⭐⭐⭐
+// ⭐ ОПЛАТА ЗВЁЗДАМИ TELEGRAM
 // ============================================================
 async function buyPackage(amount) {
   if (!featuresEnabled.topup) { showToast('🔴 Функция отключена', 'error'); return; }
@@ -860,28 +866,33 @@ async function buyPackage(amount) {
   res.innerHTML = '<div class="result draw">⏳ Создаём счёт...</div>';
 
   const tg = window.Telegram?.WebApp;
+  console.log('TG WebApp:', tg);
+  console.log('API_URL:', API_URL);
+
   if (!tg) {
-    res.innerHTML = '<div class="result lose">❌ Открой через Telegram/Staticgram</div>';
+    res.innerHTML = '<div class="result lose">❌ Telegram WebApp не загружен.<br>Открой через StaticGram/Telegram</div>';
+    return;
+  }
+
+  if (!tg.openInvoice) {
+    res.innerHTML = '<div class="result lose">❌ openInvoice недоступен. Обнови клиент.</div>';
     return;
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/invoice`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: currentUserId, amount: amount })
-    });
-
+    const response = await fetch(`${API_URL}/api/invoice?user_id=${currentUserId}&amount=${amount}`);
     const data = await response.json();
+    console.log('Invoice response:', data);
 
     if (!data.ok || !data.invoice_link) {
-      res.innerHTML = `<div class="result lose">❌ Ошибка: ${data.error || 'не удалось создать счёт'}</div>`;
+      res.innerHTML = `<div class="result lose">❌ ${data.error || 'Ошибка сервера'}</div>`;
       return;
     }
 
     tg.openInvoice(data.invoice_link, async (status) => {
+      console.log('Invoice status:', status);
       if (status === 'paid') {
-        // Оплата успешна — ждём подтверждения от бота (1-2 сек), потом синхронизируем
+        // Ждём 2 сек и запрашиваем баланс с бэкенда
         setTimeout(async () => {
           try {
             const r = await fetch(`${API_URL}/api/balance?user_id=${currentUserId}`);
@@ -889,35 +900,30 @@ async function buyPackage(amount) {
             if (b.ok) {
               const me = getUser(currentUserId);
               me.balance = b.balance;
+              if (b.is_vip) me.is_vip = 1;
               updateUI();
             }
-          } catch (e) { console.error(e); }
-        }, 1500);
+          } catch (e) { console.error('Balance fetch fail:', e); }
+        }, 2000);
 
+        // Мгновенно показываем
         const me = getUser(currentUserId);
         me.balance += amount;
-        me.has_deposited = 1;
         updateUI();
-        res.innerHTML = `<div class="result win">✅ Оплачено! +${amount} ⭐</div>`;
-        showToast(`✅ Баланс пополнен на ${amount} ⭐`, 'success');
 
-        // Страховка — сообщаем бэкенду
-        fetch(`${API_URL}/api/confirm_topup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: currentUserId, amount: amount })
-        }).catch(() => {});
+        res.innerHTML = `<div class="result win">✅ Оплачено! +${amount} ⭐</div>`;
+        showToast(`✅ +${amount} ⭐`, 'success');
       } else if (status === 'cancelled') {
-        res.innerHTML = '<div class="result lose">❌ Оплата отменена</div>';
+        res.innerHTML = '<div class="result lose">❌ Отменено</div>';
       } else if (status === 'failed') {
         res.innerHTML = '<div class="result lose">❌ Ошибка оплаты</div>';
       } else {
-        res.innerHTML = '<div class="result draw">⏳ Ожидание оплаты...</div>';
+        res.innerHTML = '<div class="result draw">⏳ Ожидание...</div>';
       }
     });
   } catch (err) {
-    console.error('Ошибка:', err);
-    res.innerHTML = '<div class="result lose">❌ Не удалось связаться с сервером</div>';
+    console.error('Fetch error:', err);
+    res.innerHTML = `<div class="result lose">❌ Сервер недоступен.<br>${err.message}</div>`;
   }
 }
 
@@ -975,6 +981,7 @@ function spinRoulette() {
       }
       me.games_played = (me.games_played || 0) + 1;
       updateUI();
+      syncToBackend();
     }
   }, 100);
 }
@@ -1019,10 +1026,11 @@ function doBattle() {
         res.innerHTML = `❌ Проигрыш. -${bet} ⭐`;
       } else {
         res.className = 'result draw';
-        res.innerHTML = `🤝 Ничья! Ставка возвращена`;
+        res.innerHTML = `🤝 Ничья!`;
       }
       me.games_played = (me.games_played || 0) + 1;
       updateUI();
+      syncToBackend();
       state.battleActive = false;
       btn.disabled = false;
     }
@@ -1086,19 +1094,19 @@ function lookupProfile() {
     return;
   }
   if (String(targetId) === String(currentUserId)) {
-    res.innerHTML = '<div class="result draw">🤔 Это ты сам. Списание не нужно.</div>';
+    res.innerHTML = '<div class="result draw">🤔 Это ты сам.</div>';
     return;
   }
   if (!isStaff(currentRole) && !me.is_vip) {
     if (me.balance < CONFIG.LOOKUP_PRICE) {
-      res.innerHTML = `<div class="result lose">❌ Нужно ${CONFIG.LOOKUP_PRICE} ⭐ для просмотра.</div>`;
+      res.innerHTML = `<div class="result lose">❌ Нужно ${CONFIG.LOOKUP_PRICE} ⭐</div>`;
       return;
     }
     me.balance -= CONFIG.LOOKUP_PRICE;
     updateUI();
   }
   const u = allUsers[targetId];
-  const priceText = (isStaff(currentRole) || me.is_vip) ? '0 ⭐ (бесплатно)' : `${CONFIG.LOOKUP_PRICE} ⭐`;
+  const priceText = (isStaff(currentRole) || me.is_vip) ? '0 ⭐' : `${CONFIG.LOOKUP_PRICE} ⭐`;
   res.innerHTML = `
     <div class="profile-card">
       <div class="profile-row"><span class="label">Юз</span><span class="value">@${u.username}</span></div>
@@ -1119,26 +1127,27 @@ function renderVipStatus() {
   const el = document.getElementById('vipStatus');
   const btn = document.getElementById('vipBuyBtn');
   if (me.is_vip) {
-    el.innerHTML = '<div class="result win">✅ У тебя активен VIP-статус!</div>';
+    el.innerHTML = '<div class="result win">✅ У тебя активен VIP!</div>';
     btn.textContent = '💎 VIP уже куплен';
     btn.disabled = true;
   } else {
-    el.innerHTML = '<div class="result draw">💎 Купи VIP, чтобы получить все бонусы</div>';
+    el.innerHTML = '<div class="result draw">💎 Купи VIP</div>';
     btn.disabled = false;
     btn.textContent = '💎 Купить VIP за 5000 ⭐';
   }
 }
 
 function buyVip() {
-  if (!featuresEnabled.buy_vip) { showToast('🔴 Функция отключена', 'error'); return; }
+  if (!featuresEnabled.buy_vip) { showToast('🔴 Отключено', 'error'); return; }
   const me = getUser(currentUserId);
-  if (me.is_vip) { showToast('💎 У тебя уже VIP', 'error'); return; }
+  if (me.is_vip) { showToast('💎 Уже VIP', 'error'); return; }
   if (me.balance < CONFIG.VIP_PRICE) { showToast(`❌ Нужно ${CONFIG.VIP_PRICE} ⭐`, 'error'); return; }
   me.balance -= CONFIG.VIP_PRICE;
   me.is_vip = 1;
   updateUI();
   renderVipStatus();
   renderMyProfile();
+  syncToBackend();
   showToast('💎 VIP активирован!', 'success');
 }
 
@@ -1218,7 +1227,6 @@ function play() {
   state.isPlaying = true;
   playBtn.disabled = true;
   playBtn.textContent = '⏳ Играем...';
-  if (bet >= 100) me.big_bets = (me.big_bets || 0) + 1;
   const dice = document.getElementById('diceDisplay');
   const rb = document.getElementById('resultBox');
   rb.className = 'result';
@@ -1244,12 +1252,13 @@ function play() {
         text = `❌ <b>Проигрыш.</b><br>🧑 ${p} vs 🤖 ${b}<br>-${bet} ⭐`;
       } else {
         type = 'draw';
-        text = `🤝 <b>Ничья!</b><br>🧑 ${p} vs 🤖 ${b}`;
+        text = `🤝 <b>Ничья!</b>`;
       }
       showResult(type, text);
       addHistory(`⚔️ Дуэль (${p} vs ${b})`, bet, type);
       me.games_played = (me.games_played || 0) + 1;
       updateUI();
+      syncToBackend();
       unlockPlayButton();
     }, 2200);
     return;
@@ -1284,26 +1293,27 @@ function play() {
     let type, text, payout = 0;
     if (draw) {
       type = 'draw';
-      text = `🤝 <b>Ничья!</b><br>Выпало: <b>${result}</b> (ровно 3)`;
+      text = `🤝 <b>Ничья!</b> (ровно 3)`;
     } else if (win) {
       payout = me.is_vip ? Math.floor(bet * (1 + CONFIG.VIP_WIN_BONUS)) : bet;
       me.balance += payout; me.wins = (me.wins || 0) + 1; me.streak = (me.streak || 0) + 1;
       if ((me.streak || 0) > (me.best_streak || 0)) me.best_streak = me.streak;
       type = 'win';
       text = g.hasChoice
-        ? `✅ <b>Победа!</b><br>Ты: ${label}, выпало: <b>${result}</b><br>+${payout} ⭐`
+        ? `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${payout} ⭐`
         : `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${payout} ⭐`;
     } else {
       me.balance -= bet; me.losses = (me.losses || 0) + 1; me.streak = 0;
       type = 'lose';
       text = g.hasChoice
-        ? `❌ <b>Проигрыш.</b><br>Ты: ${label}, выпало: <b>${result}</b><br>-${bet} ⭐`
+        ? `❌ <b>Проигрыш.</b><br>Выпало: <b>${result}</b><br>-${bet} ⭐`
         : `❌ <b>Проигрыш.</b><br>Выпало: <b>${result}</b><br>-${bet} ⭐`;
     }
     showResult(type, text);
     addHistory(`${g.emoji} ${g.name} (${result})`, bet, type);
     me.games_played = (me.games_played || 0) + 1;
     updateUI();
+    syncToBackend();
     unlockPlayButton();
   }, 2000);
 }
@@ -1331,7 +1341,7 @@ function addHistory(name, bet, type) {
 // ВЫВОД
 // ============================================================
 function doWithdraw() {
-  if (!featuresEnabled.withdraw) { showToast('🔴 Функция отключена', 'error'); return; }
+  if (!featuresEnabled.withdraw) { showToast('🔴 Отключено', 'error'); return; }
   const amt = parseInt(document.getElementById('withdrawInput').value);
   const res = document.getElementById('withdrawResult');
   const me = getUser(currentUserId);
@@ -1347,6 +1357,7 @@ function doWithdraw() {
     created_at: new Date().toISOString(),
   });
   updateUI();
+  syncToBackend();
   document.getElementById('withdrawInput').value = '';
   res.innerHTML = `<div class="result win">✅ Заявка на вывод ${amt} ⭐ создана</div>`;
 }
@@ -1355,17 +1366,17 @@ function doWithdraw() {
 // ПРОМОКОДЫ
 // ============================================================
 function activatePromo() {
-  if (!featuresEnabled.promo) { showToast('🔴 Функция отключена', 'error'); return; }
+  if (!featuresEnabled.promo) { showToast('🔴 Отключено', 'error'); return; }
   const code = document.getElementById('promoInput').value.trim().toUpperCase();
   const res = document.getElementById('promoResult');
   const me = getUser(currentUserId);
-  if (!code) { res.innerHTML = '<div class="result lose">❌ Введи промокод</div>'; return; }
+  if (!code) { res.innerHTML = '<div class="result lose">❌ Введи код</div>'; return; }
   const promo = promos[code];
-  if (!promo) { res.innerHTML = '<div class="result lose">❌ Промокод не найден</div>'; return; }
-  if (promo.uses_left <= 0) { res.innerHTML = '<div class="result lose">❌ Промокод исчерпан</div>'; return; }
+  if (!promo) { res.innerHTML = '<div class="result lose">❌ Не найден</div>'; return; }
+  if (promo.uses_left <= 0) { res.innerHTML = '<div class="result lose">❌ Исчерпан</div>'; return; }
   if (!usedPromos[currentUserId]) usedPromos[currentUserId] = new Set();
   if (usedPromos[currentUserId].has(code)) {
-    res.innerHTML = '<div class="result lose">❌ Ты уже использовал этот промокод</div>';
+    res.innerHTML = '<div class="result lose">❌ Уже использован</div>';
     return;
   }
   promo.uses_left--;
@@ -1376,12 +1387,13 @@ function activatePromo() {
     text = `✅ Активирован! +${promo.value || promo.amount} ⭐`;
   } else if (promo.promo_type === 'vip') {
     me.is_vip = 1;
-    text = '✅ Активирован! 💎 VIP навсегда';
+    text = '✅ Активирован! 💎 VIP';
   } else {
     me.balance += promo.amount || 0;
     text = `✅ Активирован! +${promo.amount || 0} ⭐`;
   }
   updateUI();
+  syncToBackend();
   document.getElementById('promoInput').value = '';
   res.innerHTML = `<div class="result win">${text}</div>`;
   showToast(text, 'success');
@@ -1391,23 +1403,24 @@ function activatePromo() {
 // ПОДАРОК
 // ============================================================
 function doGift() {
-  if (!featuresEnabled.gift) { showToast('🔴 Функция отключена', 'error'); return; }
+  if (!featuresEnabled.gift) { showToast('🔴 Отключено', 'error'); return; }
   const targetRaw = document.getElementById('giftUser').value.trim();
   const amount = parseInt(document.getElementById('giftAmount').value);
   const res = document.getElementById('giftResult');
   const me = getUser(currentUserId);
-  if (!targetRaw || !amount) { res.innerHTML = '<div class="result lose">❌ Заполни все поля</div>'; return; }
-  if (amount < 10) { res.innerHTML = '<div class="result lose">❌ Минимум 10 ⭐</div>'; return; }
-  if (amount > me.balance) { res.innerHTML = '<div class="result lose">❌ Недостаточно средств</div>'; return; }
+  if (!targetRaw || !amount) { res.innerHTML = '<div class="result lose">❌ Заполни поля</div>'; return; }
+  if (amount < 10) { res.innerHTML = '<div class="result lose">❌ Мин. 10 ⭐</div>'; return; }
+  if (amount > me.balance) { res.innerHTML = '<div class="result lose">❌ Мало средств</div>'; return; }
   const targetId = findUserId(targetRaw);
-  if (!targetId) { res.innerHTML = '<div class="result lose">❌ Получатель не найден</div>'; return; }
-  if (String(targetId) === String(currentUserId)) { res.innerHTML = '<div class="result draw">🤔 Себе дарить нельзя</div>'; return; }
+  if (!targetId) { res.innerHTML = '<div class="result lose">❌ Не найден</div>'; return; }
+  if (String(targetId) === String(currentUserId)) { res.innerHTML = '<div class="result draw">🤔 Себе нельзя</div>'; return; }
   me.balance -= amount;
   allUsers[targetId].balance += amount;
   updateUI();
+  syncToBackend();
   document.getElementById('giftUser').value = '';
   document.getElementById('giftAmount').value = '';
-  res.innerHTML = `<div class="result win">✅ Подарено ${amount} ⭐ игроку @${allUsers[targetId].username}</div>`;
+  res.innerHTML = `<div class="result win">✅ Подарено ${amount} ⭐ @${allUsers[targetId].username}</div>`;
   showToast(`✅ Подарено ${amount} ⭐`, 'success');
 }
 
@@ -1416,7 +1429,7 @@ function doGift() {
 // ============================================================
 function renderTop() {
   if (!featuresEnabled.top10) {
-    document.getElementById('topList').innerHTML = '<p style="text-align:center;color:#8888aa;">🔴 Функция отключена</p>';
+    document.getElementById('topList').innerHTML = '<p style="text-align:center;color:#8888aa;">🔴 Отключено</p>';
     return;
   }
   const list = document.getElementById('topList');
@@ -1484,11 +1497,11 @@ function openInfo(title, html) {
 function closeInfo() { document.getElementById('modalInfo').classList.remove('active'); }
 
 // ============================================================
-// АДМИН (функции кратко — как раньше)
+// АДМИН
 // ============================================================
 function adminAddBalance() {
   if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
-  openModalInput('💰 Пополнить', 'Введи @username и сумму', '@username 500', (val) => {
+  openModalInput('💰 Пополнить', '@username и сумму', '@username 500', (val) => {
     const [t, a] = val.split(/\s+/); const id = findUserId(t); const amt = parseInt(a);
     if (!id || !amt) { showToast('❌ Неверно', 'error'); return; }
     allUsers[id].balance += amt; updateUI();
@@ -1497,7 +1510,7 @@ function adminAddBalance() {
 }
 function adminRemoveBalance() {
   if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
-  openModalInput('❌ Списать', 'Введи @username и сумму', '@username 500', (val) => {
+  openModalInput('❌ Списать', '@username и сумму', '@username 500', (val) => {
     const [t, a] = val.split(/\s+/); const id = findUserId(t); const amt = parseInt(a);
     if (!id || !amt) { showToast('❌ Неверно', 'error'); return; }
     allUsers[id].balance = Math.max(0, allUsers[id].balance - amt); updateUI();
@@ -1506,7 +1519,7 @@ function adminRemoveBalance() {
 }
 function adminViewBalance() {
   if (!isStaff(currentRole)) return;
-  openModalInput('👁 Баланс', 'Введи @username', '@username', (val) => {
+  openModalInput('👁 Баланс', '@username', '@username', (val) => {
     const id = findUserId(val); if (!id) { showToast('❌ Не найден', 'error'); return; }
     openInfo('👁 Баланс', `@${allUsers[id].username}<br><b>${allUsers[id].balance} ⭐</b>`);
   });
@@ -1533,7 +1546,8 @@ function adminStats() {
   openInfo('📊 Статистика', `
     👥 Юзеров: <b>${Object.keys(allUsers).length}</b><br>
     💰 Общий баланс: <b>${total} ⭐</b><br>
-    💎 VIP: <b>${vips}</b>
+    💎 VIP: <b>${vips}</b><br>
+    💸 Заявок: <b>${withdrawals.filter(w => w.status === 'pending').length}</b>
   `);
 }
 function adminToggleGame() {
@@ -1560,7 +1574,7 @@ function adminToggleFeature() {
 function toggleFeature(k) { featuresEnabled[k] = !featuresEnabled[k]; saveAll(); closeInfo(); adminToggleFeature(); }
 function adminPromo() {
   if (!isStaff(currentRole)) return;
-  openModalInput('🎁 Промо', 'КОД ТИП ЗНАЧ КОЛ (balance/vip)', 'HELLO balance 100 50', (val) => {
+  openModalInput('🎁 Промо', 'КОД ТИП ЗНАЧ КОЛ', 'HELLO balance 100 50', (val) => {
     const [code, type, value, uses] = val.split(/\s+/);
     if (!code || !type || !uses) return;
     promos[code.toUpperCase()] = { code: code.toUpperCase(), promo_type: type, value: parseInt(value) || 0, amount: parseInt(value) || 0, uses_left: parseInt(uses) };
@@ -1616,13 +1630,16 @@ function adminResetStats() {
     saveAll(); showToast('✅ Сброшено', 'success');
   });
 }
-function adminOnline() {
+async function adminOnline() {
   if (!isStaff(currentRole)) return;
-  const now = Date.now();
-  const online = Object.values(allUsers).filter(u => u.last_seen && (now - new Date(u.last_seen).getTime()) < 5 * 60 * 1000);
-  let html = `<b>🟢 Онлайн (${online.length}):</b><br><br>`;
-  html += online.length ? online.map(u => `@${u.username} — ${u.balance} ⭐`).join('<br>') : 'Пусто';
-  openInfo('🟢 Онлайн', html);
+  try {
+    const r = await fetch(`${API_URL}/api/online`);
+    const d = await r.json();
+    if (!d.ok) { showToast('❌ Ошибка', 'error'); return; }
+    let html = `<b>🟢 Всего юзеров (${d.users.length}):</b><br><br>`;
+    html += d.users.slice(0, 50).map(u => `ID ${u.user_id} — ${u.balance} ⭐${u.is_vip ? ' 💎' : ''}`).join('<br>');
+    openInfo('🟢 Юзеры', html);
+  } catch (e) { showToast('❌ Сервер недоступен', 'error'); }
 }
 function adminSendMessage() {
   if (!isStaff(currentRole)) return;
@@ -1632,7 +1649,6 @@ function adminSendMessage() {
     showToast(`✅ Отправлено @${allUsers[id].username}`, 'success');
   });
 }
-function adminLogs() { if (!isStaff(currentRole)) return; openInfo('📋 Логи', `Чат: ${logChatId || '—'}`); }
 function adminWithdrawals() {
   if (!isStaff(currentRole)) return;
   const pending = withdrawals.filter(w => w.status === 'pending');
@@ -1678,21 +1694,6 @@ function ownerRemoveAdmin() {
     ADMIN_IDS.splice(i, 1); saveAll(); showToast('✅ Убран', 'success');
   });
 }
-function ownerAddOwner() {
-  if (currentRole !== 'owner') return;
-  openModalInput('👑 Владелец', 'ID', '123456789', (val) => {
-    const id = parseInt(val); if (!id) return;
-    if (!OWNER_IDS.includes(id)) { OWNER_IDS.push(id); ensureUser(id, 'owner' + id); saveAll(); showToast('✅ Добавлен', 'success'); }
-  });
-}
-function ownerRemoveOwner() {
-  if (currentRole !== 'owner') return;
-  openModalInput('👑 Убрать', 'ID', '123456789', (val) => {
-    const id = parseInt(val); if (id === currentUserId) return;
-    const i = OWNER_IDS.indexOf(id); if (i === -1) return;
-    OWNER_IDS.splice(i, 1); saveAll(); showToast('✅ Убран', 'success');
-  });
-}
 async function ownerBroadcast() {
   if (currentRole !== 'owner') return;
   openModalInput('📣 Рассылка', 'Текст', 'Привет', async (val) => {
@@ -1709,92 +1710,83 @@ async function ownerBroadcast() {
     } catch (e) { showToast('❌ Сервер недоступен', 'error'); }
   });
 }
-function ownerMaintenance() { if (currentRole !== 'owner') return; featuresEnabled.maintenance = !featuresEnabled.maintenance; saveAll(); showToast(`🛠 ${featuresEnabled.maintenance ? 'ВКЛ' : 'ВЫКЛ'}`, 'success'); }
-function ownerSetLogs() { if (currentRole !== 'owner') return; openModalInput('📋 Логи', 'ID чата', '-100...', (v) => { logChatId = v; saveAll(); showToast('✅', 'success'); }); }
-function ownerResetAll() {
-  if (currentRole !== 'owner') return;
-  openModalInput('💥 СБРОС', 'Напиши СБРОС', 'СБРОС', (v) => {
-    if (v.toUpperCase() !== 'СБРОС') return;
-    for (const id in allUsers) Object.assign(allUsers[id], { balance: 0, games_played: 0, wins: 0, losses: 0, streak: 0, best_streak: 0 });
-    saveAll(); updateUI(); showToast('💥 Сброшено', 'error');
-  });
-}
-function ownerExport() {
-  if (currentRole !== 'owner') return;
-  const data = { users: allUsers, promos, owners: OWNER_IDS, admins: ADMIN_IDS };
-  const json = JSON.stringify(data);
-  navigator.clipboard.writeText(json).then(() => showToast('📤 Скопировано', 'success'))
-    .catch(() => openInfo('Экспорт', `<textarea style="width:100%;height:300px;background:#0f0f1a;color:#fff;border:1px solid #3d3d5c;padding:10px;">${json}</textarea>`));
-}
-function ownerImport() {
-  if (currentRole !== 'owner') return;
-  openModalInput('📥 Импорт', 'JSON', '{}', (v) => {
-    try { const d = JSON.parse(v); if (d.users) allUsers = d.users; if (d.promos) promos = d.promos; if (d.owners) OWNER_IDS = d.owners; if (d.admins) ADMIN_IDS = d.admins; saveAll(); updateUI(); showToast('📥 OK', 'success'); }
-    catch { showToast('❌ JSON', 'error'); }
-  });
-}
-function ownerWipeHistory() { if (currentRole !== 'owner') return; for (const id in allUsers) localStorage.removeItem('casino_history_' + id); state.history = []; saveAll(); showToast('🗑 OK', 'success'); }
 function ownerStats() { adminStats(); }
 
 // ============================================================
 // СТАРТ
 // ============================================================
 async function init() {
+  console.log('=== INIT START ===');
   loadAll();
 
   const tg = window.Telegram?.WebApp;
+  console.log('Telegram WebApp:', tg);
+  if (tg) { try { tg.ready(); tg.expand(); } catch(e) { console.error(e); } }
+
   const urlParams = new URLSearchParams(window.location.search);
   let userIdFromUrl = urlParams.get('user_id');
-
   let realUsername = null;
-  if (tg) {
-    try { tg.ready(); tg.expand(); } catch (e) {}
-    if (tg.initDataUnsafe?.user) {
-      const u = tg.initDataUnsafe.user;
-      realUsername = u.username || u.first_name || null;
-      if (!userIdFromUrl && u.id) userIdFromUrl = u.id;
-    }
+
+  if (tg?.initDataUnsafe?.user) {
+    const u = tg.initDataUnsafe.user;
+    realUsername = u.username || u.first_name || null;
+    if (!userIdFromUrl && u.id) userIdFromUrl = u.id;
   }
 
   if (!userIdFromUrl) {
     const saved = localStorage.getItem('casino_user_id');
     if (saved) userIdFromUrl = saved;
   }
-  if (!userIdFromUrl) userIdFromUrl = prompt('Введи свой ID:');
-  if (!userIdFromUrl) { showToast('❌ Не удалось получить ID', 'error'); return; }
+
+  if (!userIdFromUrl) {
+    try { userIdFromUrl = prompt('Введи свой ID:'); } catch (e) {}
+  }
+
+  if (!userIdFromUrl) {
+    console.error('No user_id');
+    showToast('❌ Не удалось получить ID', 'error');
+    return;
+  }
 
   currentUserId = parseInt(userIdFromUrl);
   if (!realUsername) realUsername = 'id' + currentUserId;
 
+  console.log('currentUserId:', currentUserId, 'username:', realUsername);
+
   ensureUser(currentUserId, realUsername);
 
-  // Подтягиваем роль + владельцев/админов с бэкенда
+  // Пытаемся получить роль и списки с бэкенда
   try {
-    const [rRole, rOwn, rAdm] = await Promise.all([
+    const [rRole, rOwn, rAdm, rBal] = await Promise.all([
       fetch(`${API_URL}/api/role?user_id=${currentUserId}`),
       fetch(`${API_URL}/api/owners`),
-      fetch(`${API_URL}/api/admins`)
+      fetch(`${API_URL}/api/admins`),
+      fetch(`${API_URL}/api/balance?user_id=${currentUserId}`)
     ]);
     const dRole = await rRole.json();
     const dOwn = await rOwn.json();
     const dAdm = await rAdm.json();
-    currentRole = dRole.ok ? dRole.role : 'user';
+    const dBal = await rBal.json();
+    if (dRole.ok) currentRole = dRole.role;
     if (dOwn.ok) OWNER_IDS = dOwn.owners;
     if (dAdm.ok) ADMIN_IDS = dAdm.admins;
-  } catch (e) {
-    console.warn('Backend offline, работаем локально');
-    currentRole = 'user';
-  }
-
-  // Подтягиваем баланс с бэкенда
-  try {
-    const rBal = await fetch(`${API_URL}/api/balance?user_id=${currentUserId}`);
-    const dBal = await rBal.json();
     if (dBal.ok) {
       const me = getUser(currentUserId);
       me.balance = dBal.balance;
+      me.is_vip = dBal.is_vip ? 1 : 0;
+      if (dBal.stats) {
+        me.games_played = dBal.stats.played;
+        me.wins = dBal.stats.wins;
+        me.losses = dBal.stats.losses;
+        me.streak = dBal.stats.streak;
+        me.best_streak = dBal.stats.best_streak;
+      }
     }
-  } catch (e) {}
+    console.log('Backend OK. Role:', currentRole);
+  } catch (e) {
+    console.warn('Backend offline, локальный режим:', e.message);
+    currentRole = 'user';
+  }
 
   if (currentRole === 'admin' || currentRole === 'owner') {
     document.getElementById('tabAdmin').classList.remove('hidden');
@@ -1805,6 +1797,7 @@ async function init() {
 
   updateUI();
   switchTo('screenMenu');
+  console.log('=== INIT DONE ===');
 }
 
 init();
