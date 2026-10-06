@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🎰 StaticGram Casino</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: radial-gradient(circle at top, #1a1a2e 0%, #0f0f1a 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    max-width: 520px;
+    margin: 0 auto;
+    height: 100vh;
+    position: relative;
+  }
+
+  .top-bar {
+    background: rgba(20, 20, 35, 0.95);
+    border-bottom: 1px solid #2d2d4a;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .top-bar h1 {
+    font-size: 16px;
+    background: linear-gradient(90deg, #f5d742, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .top-balance {
+    background: #1e1e3a;
+    border: 1px solid #3d3d5c;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f5d742;
+  }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: 90px;
+    scrollbar-width: thin;
+    scrollbar-color: #3d3d5c transparent;
+  }
+
+  .content::-webkit-scrollbar { width: 4px; }
+  .content::-webkit-scrollbar-thumb { background: #3d3d5c; border-radius: 4px; }
+
+  .screen { display: none; animation: fadeIn 0.25s ease; }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #f5d742;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, #2d2d4a, #3d3d5c);
+    border: 1px solid #4d4d6c;
+    border-radius: 12px;
+    padding: 14px 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+
+  .btn:hover, .btn:active {
+    background: linear-gradient(135deg, #3d3d5c, #4d4d6c);
+    transform: translateY(-1px);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #f59e0b, #f5d742);
+    color: #1a1a2e;
+    border: none;
+    font-weight: 700;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #b91c1c, #dc2626);
+    border: none;
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #15803d, #22c55e);
+    border: none;
+  }
+
+  .btn-full {
+    width: 100%;
+    padding: 16px;
+    font-size: 15px;
+    margin-top: 8px;
+  }
+
+  .dice-display {
+    font-size: 110px;
+    text-align: center;
+    margin: 15px 0;
+    min-height: 140px;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .dice-display.rolling {
+    animation: roll 0.5s ease-in-out infinite;
+  }
+
+  @keyframes roll {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(90deg) scale(1.1); }
+    50% { transform: rotate(180deg) scale(0.95); }
+    75% { transform: rotate(270deg) scale(1.05); }
+  }
+
+  .input-group { margin-bottom: 15px; }
+
+  .input-group label {
+    display: block;
+    font-size: 12px;
+    color: #8888aa;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .input-group input {
+    width: 100%;
+    background: #1a1a2e;
+    border: 1px solid #3d3d5c;
+    border-radius: 10px;
+    padding: 12px;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+  }
+
+  .input-group input:focus { border-color: #f5d742; }
+
+  .choice-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .choice-btn {
+    background: #1a1a2e;
+    border: 2px solid #3d3d5c;
+    border-radius: 12px;
+    padding: 14px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .choice-btn.selected {
+    background: linear-gradient(135deg, #f59e0b, #f5d742);
+    color: #1a1a2e;
+    border-color: #f5d742;
+  }
+
+  .result {
+    text-align: center;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 12px;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .result.win { background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; color: #4ade80; display: block; }
+  .result.lose { background: rgba(220, 38, 38, 0.15); border: 1px solid #dc2626; color: #f87171; display: block; }
+  .result.draw { background: rgba(245, 217, 66, 0.15); border: 1px solid #f5d742; color: #f5d742; display: block; }
+
+  .profile-card {
+    background: linear-gradient(135deg, #1e1e3a, #2a2a4a);
+    border: 1px solid #3d3d5c;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+  }
+
+  .profile-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+  }
+
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row .label { color: #8888aa; }
+  .profile-row .value { color: #f5d742; font-weight: 600; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .stat-card {
+    background: #1a1a2e;
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 1px solid #2d2d4a;
+    text-align: center;
+    font-size: 11px;
+    color: #8888aa;
+  }
+
+  .stat-card span {
+    display: block;
+    color: #f5d742;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .top-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1a1a2e;
+    border: 1px solid #2d2d4a;
+    border-radius: 12px;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+
+  .top-item .place { font-weight: 700; color: #f5d742; min-width: 30px; }
+  .top-item .name { flex: 1; margin-left: 10px; }
+  .top-item .value { color: #f5d742; font-weight: 600; }
+
+  .history-item {
+    background: #1a1a2e;
+    border: 1px solid #2d2d4a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .history-item.win { border-left: 3px solid #22c55e; }
+  .history-item.lose { border-left: 3px solid #dc2626; }
+
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 520px;
+    background: rgba(15, 15, 26, 0.98);
+    border-top: 1px solid #2d2d4a;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 8px 5px;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+  }
+
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 2px;
+    background: none;
+    border: none;
+    color: #8888aa;
+    cursor: pointer;
+    font-size: 10px;
+    gap: 3px;
+  }
+
+  .tab .tab-icon { font-size: 20px; }
+  .tab.active { color: #f5d742; }
+
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .modal.active { display: flex; animation: fadeIn 0.2s ease; }
+
+  .modal-content {
+    background: #1a1a2e;
+    border: 1px solid #3d3d5c;
+    border-radius: 16px;
+    padding: 25px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal-content h2 {
+    margin-bottom: 15px;
+    color: #f5d742;
+    text-align: center;
+    font-size: 18px;
+  }
+
+  .modal-content p {
+    color: #ccc;
+    margin-bottom: 15px;
+    line-height: 1.5;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .modal-content input {
+    width: 100%;
+    background: #0f0f1a;
+    border: 1px solid #3d3d5c;
+    border-radius: 10px;
+    padding: 12px;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    margin-bottom: 12px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #2d2d4a;
+    border: 1px solid #4d4d6c;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    z-index: 200;
+    max-width: 90%;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast.success { background: #14532d; border-color: #22c55e; }
+  .toast.error { background: #450a0a; border-color: #dc2626; }
+
+  .admin-user-row {
+    background: #1a1a2e;
+    border: 1px solid #2d2d4a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .admin-user-row button {
+    background: #dc2626;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .hidden { display: none !important; }
+
+  .role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  .role-owner { background: #f5d742; color: #1a1a2e; }
+  .role-admin { background: #3b82f6; color: #fff; }
+  .role-user { background: #3d3d5c; color: #aaa; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>🎰 StaticGram Casino</h1>
+  <div class="top-balance" id="topBalance">1000 ⭐</div>
+</div>
+
+<div class="content" id="content">
+
+  <div class="screen active" id="screenMenu">
+    <div class="screen-title">🎲 Игры</div>
+    <div class="menu-grid">
+      <button class="btn" onclick="openGame('even_odd')">🎲 Чёт/Нечет</button>
+      <button class="btn" onclick="openGame('more_less')">📈 Больше/Меньше</button>
+      <button class="btn" onclick="openGame('dart')">🎯 Дартс</button>
+      <button class="btn" onclick="openGame('basketball')">🏀 Баскетбол</button>
+      <button class="btn" onclick="openGame('football')">⚽ Футбол</button>
+      <button class="btn" onclick="openGame('bowling')">🎳 Боулинг</button>
+      <button class="btn" onclick="openGame('slot_machine')">🎰 Слоты</button>
+      <button class="btn" onclick="openGame('duel')">⚔️ Дуэль</button>
+    </div>
+
+    <div class="menu-grid" style="grid-template-columns: 1fr;">
+      <button class="btn btn-gold" onclick="openDaily()">📅 Ежедневный бонус</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">Сыграно<span id="statGames">0</span></div>
+      <div class="stat-card">Побед<span id="statWins">0</span></div>
+      <div class="stat-card">Проигрышей<span id="statLosses">0</span></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screenGame">
+    <div class="screen-title" id="gameTitle">Игра</div>
+    <div class="dice-display" id="diceDisplay">🎲</div>
+
+    <div class="choice-row" id="choiceRow" style="display:none;">
+      <button class="choice-btn" id="choiceA" onclick="selectChoice('A')">—</button>
+      <button class="choice-btn" id="choiceB" onclick="selectChoice('B')">—</button>
+    </div>
+
+    <div class="input-group">
+      <label>Ставка (мин. 10)</label>
+      <input type="number" id="betInput" placeholder="Введите ставку" min="10" inputmode="numeric">
+    </div>
+
+    <button class="btn btn-gold btn-full" onclick="play()">🎲 Играть</button>
+    <div class="result" id="resultBox"></div>
+    <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
+  </div>
+
+  <div class="screen" id="screenProfile">
+    <div class="screen-title">👤 Мой профиль</div>
+    <div class="profile-card" id="myProfileCard"></div>
+  </div>
+
+  <div class="screen" id="screenLookup">
+    <div class="screen-title">🔍 Чужой профиль</div>
+    <div class="input-group">
+      <label>@username или ID</label>
+      <input type="text" id="lookupInput" placeholder="Введи @username или ID">
+    </div>
+    <button class="btn btn-gold btn-full" onclick="lookupProfile()">🔍 Найти (400 ⭐)</button>
+    <div id="lookupResult" style="margin-top:15px;"></div>
+  </div>
+
+  <div class="screen" id="screenTopUp">
+    <div class="screen-title">💳 Пополнение</div>
+    <div class="input-group">
+      <label>Сумма пополнения</label>
+      <input type="number" id="topUpInput" placeholder="Например 500" min="10" inputmode="numeric">
+    </div>
+    <button class="btn btn-gold btn-full" onclick="doTopUp()">💳 Пополнить</button>
+  </div>
+
+  <div class="screen" id="screenWithdraw">
+    <div class="screen-title">💸 Вывод</div>
+    <p style="text-align:center;color:#8888aa;font-size:13px;margin-bottom:15px;">
+      Минимум 100 ⭐. Заявка уйдёт администрации.
+    </p>
+    <div class="input-group">
+      <label>Сумма вывода</label>
+      <input type="number" id="withdrawInput" placeholder="Например 100" min="100" inputmode="numeric">
+    </div>
+    <button class="btn btn-gold btn-full" onclick="doWithdraw()">💸 Отправить заявку</button>
+    <div id="withdrawResult" style="margin-top:15px;"></div>
+  </div>
+
+  <div class="screen" id="screenPromo">
+    <div class="screen-title">🎁 Промокоды</div>
+    <div class="input-group">
+      <label>Введи промокод</label>
+      <input type="text" id="promoInput" placeholder="Например HELLO2026">
+    </div>
+    <button class="btn btn-gold btn-full" onclick="activatePromo()">🎁 Активировать</button>
+  </div>
+
+  <div class="screen" id="screenTop">
+    <div class="screen-title">🏆 Топ-10 по балансу</div>
+    <div id="topList"></div>
+  </div>
+
+  <div class="screen" id="screenHistory">
+    <div class="screen-title">📜 История игр</div>
+    <div id="historyList"></div>
+  </div>
+
+  <div class="screen" id="screenAdmin">
+    <div class="screen-title">🛡 Админ-панель</div>
+    <div class="menu-grid" style="grid-template-columns: 1fr;">
+      <button class="btn btn-success" onclick="adminAddBalance()">💰 Пополнить чужой баланс</button>
+      <button class="btn btn-danger" onclick="adminRemoveBalance()">❌ Списать чужие звёзды</button>
+      <button class="btn" onclick="adminViewBalance()">👁 Посмотреть чужой баланс</button>
+      <button class="btn" onclick="adminResetTop()">🗑 Сброс из топов</button>
+      <button class="btn" onclick="adminBan()">🚫 Бан / Разбан</button>
+      <button class="btn" onclick="adminStats()">📊 Статистика</button>
+      <button class="btn" onclick="adminToggleGame()">🎮 Управление играми</button>
+      <button class="btn" onclick="adminPromo()">🎁 Создать промокод</button>
+      <button class="btn" onclick="adminStaffList()">👥 Список персонала</button>
+    </div>
+    <div id="adminResult" style="margin-top:15px;"></div>
+  </div>
+
+  <div class="screen" id="screenOwner">
+    <div class="screen-title">👑 Панель владельца</div>
+    <div class="menu-grid" style="grid-template-columns: 1fr;">
+      <button class="btn btn-success" onclick="ownerAddAdmin()">➕ Добавить админа</button>
+      <button class="btn btn-danger" onclick="ownerRemoveAdmin()">➖ Удалить админа</button>
+      <button class="btn btn-gold" onclick="ownerBroadcast()">📣 Рассылка</button>
+      <button class="btn" onclick="ownerStats()">📊 Полная статистика</button>
+    </div>
+    <div id="ownerResult" style="margin-top:15px;"></div>
+  </div>
+
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab active" data-screen="screenMenu" onclick="switchTo('screenMenu')">
+    <span class="tab-icon">🎲</span>
+    <span>Игры</span>
+  </button>
+  <button class="tab" data-screen="screenProfile" onclick="switchTo('screenProfile')">
+    <span class="tab-icon">👤</span>
+    <span>Профиль</span>
+  </button>
+  <button class="tab" data-screen="screenTopUp" onclick="switchTo('screenTopUp')">
+    <span class="tab-icon">💳</span>
+    <span>Пополнить</span>
+  </button>
+  <button class="tab hidden" id="tabAdmin" data-screen="screenAdmin" onclick="switchTo('screenAdmin')">
+    <span class="tab-icon">🛡</span>
+    <span>Админ</span>
+  </button>
+  <button class="tab hidden" id="tabOwner" data-screen="screenOwner" onclick="switchTo('screenOwner')">
+    <span class="tab-icon">👑</span>
+    <span>Владелец</span>
+  </button>
+</div>
+
+<div class="modal" id="modalInput">
+  <div class="modal-content">
+    <h2 id="modalTitle">Ввод</h2>
+    <p id="modalDesc"></p>
+    <input type="text" id="modalInputField" placeholder="">
+    <button class="btn btn-gold btn-full" onclick="modalSubmit()">OK</button>
+    <button class="btn btn-full" onclick="closeModal()">Отмена</button>
+  </div>
+</div>
+
+<div class="modal" id="modalInfo">
+  <div class="modal-content">
+    <h2 id="infoTitle">Инфо</h2>
+    <div id="infoContent" style="color:#ccc;font-size:14px;line-height:1.6;text-align:center;margin-bottom:15px;"></div>
+    <button class="btn btn-gold btn-full" onclick="closeInfo()">Закрыть</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// АДРЕС API БОТА — ЗАМЕНИ НА СВОЙ
+// ============================================================
+const API_URL = "http://127.0.0.1:8080";
+// const API_URL = "https://api.твой-домен.ru";  // на VPS
+
+// ============================================================
+// РОЛИ (получаются с бота, здесь только дефолт)
+// ============================================================
+let currentRole = 'user';
+
+function roleBadge(role) {
+  if (role === 'owner') return '<span class="role-badge role-owner">👑 Владелец</span>';
+  if (role === 'admin') return '<span class="role-badge role-admin">🛡 Админ</span>';
+  return '<span class="role-badge role-user">👤 Игрок</span>';
+}
+
+function isStaff(role) {
+  return role === 'admin' || role === 'owner';
+}
+
+// ============================================================
+// СОСТОЯНИЕ
+// ============================================================
+const state = {
+  balance: 1000,
+  gamesPlayed: 0,
+  wins: 0,
+  losses: 0,
+  history: [],
+  currentGame: null,
+  selectedChoice: null,
+};
+
+const allUsers = {
+  1780243962: { username: 'owner',   balance: 1000 },
+  1780243576: { username: 'admin1',  balance: 750 },
+  1780243422: { username: 'admin2',  balance: 500 },
+  1780243999: { username: 'player1', balance: 320 },
+  1780243618: { username: 'player2', balance: 250 },
+};
+
+let currentUserId = 0;
+
+const GAMES = {
+  even_odd:    { emoji: '🎲', name: 'Чёт/Нечет',      max: 6,  hasChoice: true,  choiceA: '🔵 Чёт',      choiceB: '🔴 Нечет' },
+  more_less:   { emoji: '🎲', name: 'Больше/Меньше',  max: 6,  hasChoice: true,  choiceA: '📈 Больше 3', choiceB: '📉 Меньше 3' },
+  dart:        { emoji: '🎯', name: 'Дартс',          max: 6,  hasChoice: false },
+  basketball:  { emoji: '🏀', name: 'Баскетбол',      max: 5,  hasChoice: false },
+  football:    { emoji: '⚽', name: 'Футбол',         max: 5,  hasChoice: false },
+  bowling:     { emoji: '🎳', name: 'Боулинг',        max: 6,  hasChoice: false },
+  slot_machine:{ emoji: '🎰', name: 'Слоты',          max: 64, hasChoice: false },
+  duel:        { emoji: '🎲', name: 'Дуэль с ботом',  max: 6,  hasChoice: false },
+};
+
+const promos = {
+  HELLO2026: { amount: 100, uses: 100 },
+  CASINO50:  { amount: 50,  uses: 100 },
+};
+
+const gamesEnabled = {
+  even_odd: true, more_less: true, dart: true, basketball: true,
+  football: true, bowling: true, slot_machine: true, duel: true,
+};
+
+// ============================================================
+// LOCALSTORAGE
+// ============================================================
+function save() {
+  localStorage.setItem('casino_state', JSON.stringify({
+    balance: state.balance,
+    gamesPlayed: state.gamesPlayed,
+    wins: state.wins,
+    losses: state.losses,
+    history: state.history.slice(0, 30),
+  }));
+}
+
+function load() {
+  const saved = localStorage.getItem('casino_state');
+  if (saved) {
+    try {
+      const d = JSON.parse(saved);
+      state.balance = d.balance ?? 1000;
+      state.gamesPlayed = d.gamesPlayed ?? 0;
+      state.wins = d.wins ?? 0;
+      state.losses = d.losses ?? 0;
+      state.history = d.history ?? [];
+    } catch (e) { console.error(e); }
+  }
+  updateUI();
+}
+
+// ============================================================
+// UI
+// ============================================================
+function updateUI() {
+  document.getElementById('topBalance').textContent = state.balance + ' ⭐';
+  document.getElementById('statGames').textContent = state.gamesPlayed;
+  document.getElementById('statWins').textContent = state.wins;
+  document.getElementById('statLosses').textContent = state.losses;
+  save();
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => { t.className = 'toast ' + type; }, 2500);
+}
+
+function switchTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(screenId);
+  if (el) el.classList.add('active');
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.screen === screenId);
+  });
+
+  const c = document.getElementById('content');
+  if (c) c.scrollTop = 0;
+
+  if (screenId === 'screenProfile') renderMyProfile();
+  if (screenId === 'screenTop') renderTop();
+  if (screenId === 'screenHistory') renderHistory();
+}
+
+// ============================================================
+// ПРОФИЛЬ
+// ============================================================
+function renderMyProfile() {
+  const card = document.getElementById('myProfileCard');
+  const u = allUsers[currentUserId] || { username: 'unknown' };
+  card.innerHTML = `
+    <div class="profile-row"><span class="label">Юз</span><span class="value">@${u.username}</span></div>
+    <div class="profile-row"><span class="label">Баланс</span><span class="value">${state.balance} ⭐</span></div>
+    <div class="profile-row"><span class="label">Сыграно игр</span><span class="value">${state.gamesPlayed}</span></div>
+    <div class="profile-row"><span class="label">Побед</span><span class="value">${state.wins}</span></div>
+    <div class="profile-row"><span class="label">Проигрышей</span><span class="value">${state.losses}</span></div>
+    <div class="profile-row"><span class="label">ID</span><span class="value">${currentUserId}</span></div>
+    <div class="profile-row"><span class="label">Роль</span><span class="value">${roleBadge(currentRole)}</span></div>
+  `;
+}
+
+// ============================================================
+// ЧУЖОЙ ПРОФИЛЬ (400 ⭐)
+// ============================================================
+function lookupProfile() {
+  const raw = document.getElementById('lookupInput').value.trim().replace('@', '');
+  if (!raw) { showToast('❌ Введи @username или ID', 'error'); return; }
+
+  let targetId = null;
+  if (/^\d+$/.test(raw)) {
+    if (allUsers[raw]) targetId = raw;
+  } else {
+    for (const id in allUsers) {
+      if (allUsers[id].username === raw) { targetId = id; break; }
+    }
+  }
+
+  const res = document.getElementById('lookupResult');
+
+  if (!targetId) {
+    res.innerHTML = '<div class="result lose">❌ Пользователь не найден. Звёзды не списаны.</div>';
+    return;
+  }
+
+  if (String(targetId) === String(currentUserId)) {
+    res.innerHTML = '<div class="result draw">🤔 Это ты сам. Списание не нужно.</div>';
+    return;
+  }
+
+  if (!isStaff(currentRole)) {
+    if (state.balance < 400) {
+      res.innerHTML = '<div class="result lose">❌ Нужно 400 ⭐ для просмотра чужого профиля.</div>';
+      return;
+    }
+    state.balance -= 400;
+    updateUI();
+  }
+
+  const u = allUsers[targetId];
+  res.innerHTML = `
+    <div class="profile-card">
+      <div class="profile-row"><span class="label">Юз</span><span class="value">@${u.username}</span></div>
+      <div class="profile-row"><span class="label">Баланс</span><span class="value">${u.balance} ⭐</span></div>
+      <div class="profile-row"><span class="label">ID</span><span class="value">${targetId}</span></div>
+      <div class="profile-row"><span class="label">Списано</span><span class="value">${isStaff(currentRole) ? '0 ⭐ (персонал)' : '400 ⭐'}</span></div>
+    </div>
+  `;
+}
+
+// ============================================================
+// ИГРЫ
+// ============================================================
+function openGame(key) {
+  if (!gamesEnabled[key]) { showToast('🔴 Игра отключена', 'error'); return; }
+  const g = GAMES[key];
+  if (!g) return;
+
+  state.currentGame = key;
+  state.selectedChoice = null;
+
+  document.getElementById('gameTitle').textContent = g.emoji + ' ' + g.name;
+  const dice = document.getElementById('diceDisplay');
+  dice.textContent = g.emoji;
+  dice.className = 'dice-display';
+  document.getElementById('betInput').value = '';
+  const rb = document.getElementById('resultBox');
+  rb.className = 'result';
+  rb.textContent = '';
+  rb.style.display = 'none';
+
+  const choiceRow = document.getElementById('choiceRow');
+  if (g.hasChoice) {
+    choiceRow.style.display = 'grid';
+    document.getElementById('choiceA').textContent = g.choiceA;
+    document.getElementById('choiceB').textContent = g.choiceB;
+    document.getElementById('choiceA').classList.remove('selected');
+    document.getElementById('choiceB').classList.remove('selected');
+  } else {
+    choiceRow.style.display = 'none';
+  }
+
+  switchTo('screenGame');
+}
+
+function selectChoice(c) {
+  state.selectedChoice = c;
+  document.getElementById('choiceA').classList.toggle('selected', c === 'A');
+  document.getElementById('choiceB').classList.toggle('selected', c === 'B');
+}
+
+function play() {
+  if (!state.currentGame) return;
+  const g = GAMES[state.currentGame];
+  const bet = parseInt(document.getElementById('betInput').value);
+
+  if (!bet || bet < 10) { showToast('❌ Минимум 10 ⭐', 'error'); return; }
+  if (bet > state.balance) { showToast('❌ Недостаточно средств', 'error'); return; }
+  if (g.hasChoice && !state.selectedChoice) { showToast('❌ Выбери вариант', 'error'); return; }
+
+  const dice = document.getElementById('diceDisplay');
+  dice.className = 'dice-display rolling';
+
+  if (state.currentGame === 'duel') {
+    const p = Math.floor(Math.random() * 6) + 1;
+    const b = Math.floor(Math.random() * 6) + 1;
+
+    let c = 0;
+    const iv = setInterval(() => {
+      dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][c % 6];
+      c++;
+    }, 100);
+
+    setTimeout(() => {
+      clearInterval(iv);
+      dice.className = 'dice-display';
+      dice.textContent = '🧑 ' + p + ' — ' + b + ' 🤖';
+
+      let type, text;
+      if (p > b) {
+        state.balance += bet; state.wins++;
+        type = 'win'; text = `✅ Победа! +${bet} ⭐`;
+      } else if (p < b) {
+        state.balance -= bet; state.losses++;
+        type = 'lose'; text = `❌ Проигрыш. -${bet} ⭐`;
+      } else {
+        type = 'draw'; text = '🤝 Ничья! Ставка возвращена';
+      }
+      showResult(type, text);
+      addHistory(`⚔️ Дуэль`, bet, type);
+      state.gamesPlayed++;
+      updateUI();
+    }, 1500);
+    return;
+  }
+
+  const result = Math.floor(Math.random() * g.max) + 1;
+
+  let c = 0;
+  const iv = setInterval(() => {
+    if (g.max <= 6) {
+      dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][c % 6];
+    } else {
+      dice.textContent = g.emoji;
+    }
+    c++;
+  }, 100);
+
+  setTimeout(() => {
+    clearInterval(iv);
+    dice.className = 'dice-display';
+    dice.textContent = g.emoji;
+
+    let win = false, draw = false, label = '';
+
+    if (state.currentGame === 'even_odd') {
+      const isEven = result % 2 === 0;
+      const correct = isEven ? 'A' : 'B';
+      win = state.selectedChoice === correct;
+      label = state.selectedChoice === 'A' ? 'Чёт' : 'Нечет';
+    } else if (state.currentGame === 'more_less') {
+      if (result === 3) draw = true;
+      else {
+        const isMore = result > 3;
+        const correct = isMore ? 'A' : 'B';
+        win = state.selectedChoice === correct;
+      }
+      label = state.selectedChoice === 'A' ? 'Больше 3' : 'Меньше 3';
+    } else {
+      win = Math.random() < 0.30;
+    }
+
+    let type, text;
+    if (draw) {
+      type = 'draw'; text = `🤝 Ничья! Выпало ${result}`;
+    } else if (win) {
+      state.balance += bet; state.wins++;
+      type = 'win';
+      text = `${g.hasChoice ? label + ', в' : 'В'}ыпало ${result}<br>✅ +${bet} ⭐`;
+    } else {
+      state.balance -= bet; state.losses++;
+      type = 'lose';
+      text = `${g.hasChoice ? label + ', в' : 'В'}ыпало ${result}<br>❌ -${bet} ⭐`;
+    }
+    showResult(type, text);
+    addHistory(`${g.emoji} ${g.name}`, bet, type);
+    state.gamesPlayed++;
+    updateUI();
+  }, 1500);
+}
+
+function showResult(type, html) {
+  const box = document.getElementById('resultBox');
+  box.innerHTML = html;
+  box.className = 'result ' + type;
+  box.style.display = 'block';
+}
+
+function addHistory(name, bet, type) {
+  state.history.unshift({ name, bet, type, time: new Date().toLocaleString() });
+  if (state.history.length > 30) state.history.pop();
+}
+
+// ============================================================
+// ПОПОЛНЕНИЕ / ВЫВОД
+// ============================================================
+function doTopUp() {
+  const amt = parseInt(document.getElementById('topUpInput').value);
+  if (!amt || amt < 10) { showToast('❌ Минимум 10 ⭐', 'error'); return; }
+  state.balance += amt;
+  updateUI();
+  document.getElementById('topUpInput').value = '';
+  showToast(`✅ Пополнено на ${amt} ⭐`, 'success');
+}
+
+function doWithdraw() {
+  const amt = parseInt(document.getElementById('withdrawInput').value);
+  const res = document.getElementById('withdrawResult');
+  if (!amt || amt < 100) {
+    res.innerHTML = '<div class="result lose">❌ Минимум 100 ⭐</div>';
+    return;
+  }
+  if (amt > state.balance) {
+    res.innerHTML = '<div class="result lose">❌ Недостаточно средств</div>';
+    return;
+  }
+  state.balance -= amt;
+  updateUI();
+  document.getElementById('withdrawInput').value = '';
+  res.innerHTML = `<div class="result win">✅ Заявка на вывод ${amt} ⭐ создана</div>`;
+}
+
+// ============================================================
+// ПРОМОКОДЫ
+// ============================================================
+function activatePromo() {
+  const code = document.getElementById('promoInput').value.trim().toUpperCase();
+  if (!code) { showToast('❌ Введи промокод', 'error'); return; }
+  const promo = promos[code];
+  if (!promo) { showToast('❌ Промокод не найден', 'error'); return; }
+  if (promo.uses <= 0) { showToast('❌ Промокод исчерпан', 'error'); return; }
+
+  promo.uses--;
+  state.balance += promo.amount;
+  updateUI();
+  document.getElementById('promoInput').value = '';
+  showToast(`✅ +${promo.amount} ⭐`, 'success');
+}
+
+// ============================================================
+// ТОП-10
+// ============================================================
+function renderTop() {
+  const list = document.getElementById('topList');
+  const players = Object.entries(allUsers)
+    .map(([id, u]) => ({ id, ...u }))
+    .sort((a, b) => b.balance - a.balance)
+    .slice(0, 10);
+
+  const medals = ['🥇', '🥈', '🥉'];
+  list.innerHTML = players.map((p, i) => `
+    <div class="top-item">
+      <span class="place">${i < 3 ? medals[i] : (i + 1) + '.'}</span>
+      <span class="name">@${p.username}</span>
+      <span class="value">${p.balance} ⭐</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// ИСТОРИЯ
+// ============================================================
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (state.history.length === 0) {
+    list.innerHTML = '<p style="text-align:center;color:#8888aa;">История пуста</p>';
+    return;
+  }
+  list.innerHTML = state.history.map(h => `
+    <div class="history-item ${h.type}">
+      <span>${h.name}</span>
+      <span>${h.type === 'win' ? '+' : '-'}${h.bet} ⭐</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// ЕЖЕДНЕВНЫЙ БОНУС
+// ============================================================
+function openDaily() {
+  const last = localStorage.getItem('last_daily');
+  const now = Date.now();
+  if (last && (now - parseInt(last)) < 24 * 60 * 60 * 1000) {
+    showToast('⏳ Бонус уже получен. Возвращайся через 24 часа', 'error');
+    return;
+  }
+  state.balance += 25;
+  localStorage.setItem('last_daily', now.toString());
+  updateUI();
+  showToast('✅ Ежедневный бонус: +25 ⭐', 'success');
+}
+
+// ============================================================
+// МОДАЛКИ
+// ============================================================
+let modalCallback = null;
+
+function openModalInput(title, desc, placeholder, callback) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalDesc').textContent = desc;
+  document.getElementById('modalInputField').value = '';
+  document.getElementById('modalInputField').placeholder = placeholder;
+  modalCallback = callback;
+  document.getElementById('modalInput').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modalInput').classList.remove('active');
+  modalCallback = null;
+}
+
+function modalSubmit() {
+  const val = document.getElementById('modalInputField').value.trim();
+  if (modalCallback) modalCallback(val);
+  closeModal();
+}
+
+function openInfo(title, html) {
+  document.getElementById('infoTitle').textContent = title;
+  document.getElementById('infoContent').innerHTML = html;
+  document.getElementById('modalInfo').classList.add('active');
+}
+
+function closeInfo() {
+  document.getElementById('modalInfo').classList.remove('active');
+}
+
+// ============================================================
+// АДМИН-ПАНЕЛЬ
+// ============================================================
+function adminAddBalance() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  openModalInput('💰 Пополнить чужой баланс', 'Введи @username или ID и сумму через пробел', '@username 500', (val) => {
+    const [target, amt] = val.split(/\s+/);
+    const id = findUserId(target);
+    const amount = parseInt(amt);
+    if (!id || !amount) { showToast('❌ Неверный ввод', 'error'); return; }
+    allUsers[id].balance += amount;
+    if (String(id) === String(currentUserId)) state.balance += amount;
+    updateUI();
+    showToast(`✅ @${allUsers[id].username} +${amount} ⭐`, 'success');
+  });
+}
+
+function adminRemoveBalance() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  openModalInput('❌ Списать звёзды', 'Введи @username или ID и сумму через пробел', '@username 500', (val) => {
+    const [target, amt] = val.split(/\s+/);
+    const id = findUserId(target);
+    const amount = parseInt(amt);
+    if (!id || !amount) { showToast('❌ Неверный ввод', 'error'); return; }
+    allUsers[id].balance = Math.max(0, allUsers[id].balance - amount);
+    if (String(id) === String(currentUserId)) state.balance = Math.max(0, state.balance - amount);
+    updateUI();
+    showToast(`✅ @${allUsers[id].username} -${amount} ⭐`, 'success');
+  });
+}
+
+function adminViewBalance() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  openModalInput('👁 Посмотреть баланс', 'Введи @username или ID', '@username', (val) => {
+    const id = findUserId(val);
+    if (!id) { showToast('❌ Не найден', 'error'); return; }
+    openInfo('👁 Баланс', `@${allUsers[id].username}<br><b>${allUsers[id].balance} ⭐</b><br>ID: ${id}`);
+  });
+}
+
+function adminResetTop() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  openModalInput('🗑 Сброс из топов', 'Введи @username или ID', '@username', (val) => {
+    const id = findUserId(val);
+    if (!id) { showToast('❌ Не найден', 'error'); return; }
+    allUsers[id].balance = 0;
+    if (String(id) === String(currentUserId)) state.balance = 0;
+    updateUI();
+    showToast(`✅ @${allUsers[id].username} сброшен`, 'success');
+  });
+}
+
+function adminBan() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  showToast('🚫 Бан/разбан — только в боте', 'error');
+}
+
+function adminStats() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  const total = Object.values(allUsers).reduce((s, u) => s + u.balance, 0);
+  openInfo('📊 Статистика', `
+    👥 Всего: <b>${Object.keys(allUsers).length}</b><br>
+    💰 Общий баланс: <b>${total} ⭐</b><br>
+    🎮 Игр сыграно: <b>${state.gamesPlayed}</b>
+  `);
+}
+
+function adminToggleGame() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  let html = '<div style="text-align:left;">';
+  for (const k in GAMES) {
+    html += `<div class="admin-user-row">
+      <span>${GAMES[k].emoji} ${GAMES[k].name}</span>
+      <button onclick="toggleGame('${k}')" style="background:${gamesEnabled[k] ? '#22c55e' : '#dc2626'}">
+        ${gamesEnabled[k] ? '🟢 Вкл' : '🔴 Выкл'}
+      </button>
+    </div>`;
+  }
+  html += '</div>';
+  openInfo('🎮 Управление играми', html);
+}
+
+function toggleGame(key) {
+  gamesEnabled[key] = !gamesEnabled[key];
+  closeInfo();
+  adminToggleGame();
+  showToast(`${GAMES[key].name}: ${gamesEnabled[key] ? 'вкл' : 'выкл'}`, gamesEnabled[key] ? 'success' : 'error');
+}
+
+function adminPromo() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  openModalInput('🎁 Создать промокод', 'Введи КОД СУММА КОЛИЧЕСТВО через пробел', 'HELLO 100 50', (val) => {
+    const [code, amt, uses] = val.split(/\s+/);
+    if (!code || !amt || !uses) { showToast('❌ Неверный формат', 'error'); return; }
+    promos[code.toUpperCase()] = { amount: parseInt(amt), uses: parseInt(uses) };
+    showToast(`✅ Промокод ${code} создан`, 'success');
+  });
+}
+
+function adminStaffList() {
+  if (!isStaff(currentRole)) { showToast('⛔ Нет доступа', 'error'); return; }
+  openInfo('👥 Список персонала', `
+    <b>👑 Владельцы</b><br>${OWNER_IDS_LOCAL.join(', ') || '—'}<br><br>
+    <b>🛡 Админы</b><br>${ADMIN_IDS_LOCAL.join(', ') || '—'}
+  `);
+}
+
+// ============================================================
+// ПАНЕЛЬ ВЛАДЕЛЬЦА
+// ============================================================
+let OWNER_IDS_LOCAL = [];
+let ADMIN_IDS_LOCAL = [];
+
+function ownerAddAdmin() {
+  if (currentRole !== 'owner') { showToast('⛔ Только владелец', 'error'); return; }
+  openModalInput('➕ Добавить админа', 'Введи ID нового админа', '123456789', (val) => {
+    const id = parseInt(val);
+    if (!id) { showToast('❌ Неверный ID', 'error'); return; }
+    if (!ADMIN_IDS_LOCAL.includes(id)) {
+      ADMIN_IDS_LOCAL.push(id);
+      allUsers[id] = allUsers[id] || { username: 'admin' + id, balance: 0 };
+      showToast(`✅ ${id} теперь админ`, 'success');
+    } else {
+      showToast('⚠️ Уже админ', 'error');
+    }
+  });
+}
+
+function ownerRemoveAdmin() {
+  if (currentRole !== 'owner') { showToast('⛔ Только владелец', 'error'); return; }
+  openModalInput('➖ Удалить админа', 'Введи ID админа', '123456789', (val) => {
+    const id = parseInt(val);
+    const idx = ADMIN_IDS_LOCAL.indexOf(id);
+    if (idx === -1) { showToast('❌ Не админ', 'error'); return; }
+    ADMIN_IDS_LOCAL.splice(idx, 1);
+    showToast(`✅ ${id} больше не админ`, 'success');
+  });
+}
+
+function ownerBroadcast() {
+  if (currentRole !== 'owner') { showToast('⛔ Только владелец', 'error'); return; }
+  openModalInput('📣 Рассылка', 'Введи текст рассылки', 'Привет всем!', (val) => {
+    if (!val) return;
+    showToast(`✅ Рассылка отправлена (${val.length} симв.)`, 'success');
+  });
+}
+
+function ownerStats() {
+  adminStats();
+}
+
+// ============================================================
+// УТИЛИТЫ
+// ============================================================
+function findUserId(query) {
+  query = query.replace('@', '');
+  if (/^\d+$/.test(query)) return allUsers[query] ? query : null;
+  for (const id in allUsers) {
+    if (allUsers[id].username === query) return id;
+  }
+  return null;
+}
+
+// ============================================================
+// СТАРТ
+// ============================================================
+async function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  let userIdFromUrl = urlParams.get('user_id');
+
+  if (!userIdFromUrl && window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      userIdFromUrl = tg.initDataUnsafe.user.id;
+    }
+  }
+
+  if (!userIdFromUrl) {
+    const saved = localStorage.getItem('casino_user_id');
+    if (saved) userIdFromUrl = saved;
+    else {
+      userIdFromUrl = prompt('Введи свой ID (для теста):');
+      if (userIdFromUrl) localStorage.setItem('casino_user_id', userIdFromUrl);
+    }
+  }
+
+  if (!userIdFromUrl) {
+    showToast('❌ Не удалось получить ID', 'error');
+    return;
+  }
+
+  currentUserId = parseInt(userIdFromUrl);
+  console.log('ID игрока:', currentUserId);
+
+  // Запрос роли у бота
+  try {
+    const res = await fetch(`${API_URL}/api/role?user_id=${currentUserId}`);
+    const data = await res.json();
+
+    if (data.ok) {
+      currentRole = data.role;
+      console.log('Роль от бота:', currentRole);
+      showToast(`👋 Ты вошёл как ${currentRole}`, 'success');
+    } else {
+      currentRole = 'user';
+    }
+  } catch (err) {
+    console.error('API недоступен:', err);
+    currentRole = 'user';
+    showToast('⚠️ API бота недоступен. Роль: user', 'error');
+  }
+
+  // Загружаем списки владельцев и админов с бота
+  try {
+    const [ownersRes, adminsRes] = await Promise.all([
+      fetch(`${API_URL}/api/owners`),
+      fetch(`${API_URL}/api/admins`),
+    ]);
+    const ownersData = await ownersRes.json();
+    const adminsData = await adminsRes.json();
+    if (ownersData.ok) OWNER_IDS_LOCAL = ownersData.owners;
+    if (adminsData.ok) ADMIN_IDS_LOCAL = adminsData.admins;
+  } catch (err) {
+    console.error('Не удалось загрузить списки:', err);
+  }
+
+  if (!allUsers[currentUserId]) {
+    allUsers[currentUserId] = { username: 'user' + currentUserId, balance: 1000 };
+  }
+
+  // Показ вкладок по роли
+  if (currentRole === 'admin' || currentRole === 'owner') {
+    document.getElementById('tabAdmin').classList.remove('hidden');
+  }
+  if (currentRole === 'owner') {
+    document.getElementById('tabOwner').classList.remove('hidden');
+  }
+
+  load();
+  switchTo('screenMenu');
+}
+
+init();
+</script>
+</body>
+</html>
