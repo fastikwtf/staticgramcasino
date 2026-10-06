@@ -29,6 +29,7 @@
     position: relative;
   }
 
+  /* ============ ВЕРХНЯЯ ПАНЕЛЬ ============ */
   .top-bar {
     background: rgba(20, 20, 35, 0.95);
     border-bottom: 1px solid #2d2d4a;
@@ -57,6 +58,7 @@
     color: #f5d742;
   }
 
+  /* ============ КОНТЕНТ ============ */
   .content {
     flex: 1;
     overflow-y: auto;
@@ -69,6 +71,7 @@
   .content::-webkit-scrollbar { width: 4px; }
   .content::-webkit-scrollbar-thumb { background: #3d3d5c; border-radius: 4px; }
 
+  /* ============ ЭКРАНЫ ============ */
   .screen { display: none; animation: fadeIn 0.25s ease; }
   .screen.active { display: block; }
 
@@ -85,13 +88,7 @@
     font-weight: 700;
   }
 
-  .menu-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-
+  /* ============ КНОПКИ ============ */
   .btn {
     background: linear-gradient(135deg, #2d2d4a, #3d3d5c);
     border: 1px solid #4d4d6c;
@@ -107,10 +104,12 @@
 
   .btn:hover, .btn:active {
     background: linear-gradient(135deg, #3d3d5c, #4d4d6c);
-    transform: translateY(-1px);
   }
 
-  .btn:active { transform: translateY(0); }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
   .btn-gold {
     background: linear-gradient(135deg, #f59e0b, #f5d742);
@@ -119,15 +118,8 @@
     font-weight: 700;
   }
 
-  .btn-danger {
-    background: linear-gradient(135deg, #b91c1c, #dc2626);
-    border: none;
-  }
-
-  .btn-success {
-    background: linear-gradient(135deg, #15803d, #22c55e);
-    border: none;
-  }
+  .btn-danger { background: linear-gradient(135deg, #b91c1c, #dc2626); border: none; }
+  .btn-success { background: linear-gradient(135deg, #15803d, #22c55e); border: none; }
 
   .btn-full {
     width: 100%;
@@ -136,24 +128,61 @@
     margin-top: 8px;
   }
 
+  /* ============ ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ КНОПОК ============ */
+  .menu-grid {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #3d3d5c transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menu-grid::-webkit-scrollbar { height: 4px; }
+  .menu-grid::-webkit-scrollbar-thumb { background: #3d3d5c; border-radius: 4px; }
+
+  .menu-grid .btn {
+    flex: 0 0 auto;
+    min-width: 130px;
+    white-space: nowrap;
+  }
+
+  /* Обычная сетка 2 колонки */
+  .menu-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  /* ============ ИГРОВОЙ ЭКРАН ============ */
   .dice-display {
-    font-size: 110px;
+    font-size: 60px;
     text-align: center;
     margin: 15px 0;
-    min-height: 140px;
-    line-height: 1;
+    min-height: 100px;
+    line-height: 1.3;
     user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    font-weight: 700;
   }
 
-  .dice-display.rolling {
-    animation: roll 0.5s ease-in-out infinite;
+  .dice-display .big-value {
+    font-size: 90px;
+    color: #f5d742;
+    line-height: 1;
   }
 
-  @keyframes roll {
-    0%, 100% { transform: rotate(0deg) scale(1); }
-    25% { transform: rotate(90deg) scale(1.1); }
-    50% { transform: rotate(180deg) scale(0.95); }
-    75% { transform: rotate(270deg) scale(1.05); }
+  .dice-display .hint {
+    font-size: 14px;
+    color: #8888aa;
+    font-weight: 400;
   }
 
   .input-group { margin-bottom: 15px; }
@@ -212,7 +241,7 @@
     font-weight: 600;
     font-size: 14px;
     margin-top: 12px;
-    line-height: 1.5;
+    line-height: 1.6;
     display: none;
   }
 
@@ -220,6 +249,7 @@
   .result.lose { background: rgba(220, 38, 38, 0.15); border: 1px solid #dc2626; color: #f87171; display: block; }
   .result.draw { background: rgba(245, 217, 66, 0.15); border: 1px solid #f5d742; color: #f5d742; display: block; }
 
+  /* ============ ПРОФИЛЬ ============ */
   .profile-card {
     background: linear-gradient(135deg, #1e1e3a, #2a2a4a);
     border: 1px solid #3d3d5c;
@@ -265,6 +295,7 @@
     margin-top: 4px;
   }
 
+  /* ============ ТОП ============ */
   .top-item {
     display: flex;
     justify-content: space-between;
@@ -281,6 +312,7 @@
   .top-item .name { flex: 1; margin-left: 10px; }
   .top-item .value { color: #f5d742; font-weight: 600; }
 
+  /* ============ ИСТОРИЯ ============ */
   .history-item {
     background: #1a1a2e;
     border: 1px solid #2d2d4a;
@@ -295,6 +327,7 @@
   .history-item.win { border-left: 3px solid #22c55e; }
   .history-item.lose { border-left: 3px solid #dc2626; }
 
+  /* ============ ТАБ-БАР ============ */
   .tab-bar {
     position: fixed;
     bottom: 0;
@@ -327,6 +360,7 @@
   .tab .tab-icon { font-size: 20px; }
   .tab.active { color: #f5d742; }
 
+  /* ============ МОДАЛКИ ============ */
   .modal {
     display: none;
     position: fixed;
@@ -378,6 +412,7 @@
     margin-bottom: 12px;
   }
 
+  /* ============ TOAST ============ */
   .toast {
     position: fixed;
     bottom: 100px;
@@ -462,7 +497,7 @@
       <button class="btn" onclick="openGame('duel')">⚔️ Дуэль</button>
     </div>
 
-    <div class="menu-grid" style="grid-template-columns: 1fr;">
+    <div class="menu-grid-2" style="grid-template-columns: 1fr;">
       <button class="btn btn-gold" onclick="openDaily()">📅 Ежедневный бонус</button>
     </div>
 
@@ -475,7 +510,10 @@
 
   <div class="screen" id="screenGame">
     <div class="screen-title" id="gameTitle">Игра</div>
-    <div class="dice-display" id="diceDisplay">🎲</div>
+    <div class="dice-display" id="diceDisplay">
+      <span class="big-value">🎲</span>
+      <span class="hint">Готов к игре</span>
+    </div>
 
     <div class="choice-row" id="choiceRow" style="display:none;">
       <button class="choice-btn" id="choiceA" onclick="selectChoice('A')">—</button>
@@ -487,7 +525,7 @@
       <input type="number" id="betInput" placeholder="Введите ставку" min="10" inputmode="numeric">
     </div>
 
-    <button class="btn btn-gold btn-full" onclick="play()">🎲 Играть</button>
+    <button class="btn btn-gold btn-full" id="playBtn" onclick="play()">🎲 Играть</button>
     <div class="result" id="resultBox"></div>
     <button class="btn btn-full" onclick="switchTo('screenMenu')">⬅️ В меню</button>
   </div>
@@ -509,11 +547,21 @@
 
   <div class="screen" id="screenTopUp">
     <div class="screen-title">💳 Пополнение</div>
-    <div class="input-group">
-      <label>Сумма пополнения</label>
-      <input type="number" id="topUpInput" placeholder="Например 500" min="10" inputmode="numeric">
+    <p style="text-align:center;color:#8888aa;font-size:13px;margin-bottom:15px;">
+      Оплата реальными звёздами Telegram ⭐<br>
+      Зачисление на игровой баланс моментально
+    </p>
+
+    <div class="menu-grid-2" style="grid-template-columns: 1fr 1fr;">
+      <button class="btn btn-gold" onclick="buyPackage(50)">⭐ 50 → 50</button>
+      <button class="btn btn-gold" onclick="buyPackage(100)">⭐ 100 → 100</button>
+      <button class="btn btn-gold" onclick="buyPackage(250)">⭐ 250 → 250</button>
+      <button class="btn btn-gold" onclick="buyPackage(500)">⭐ 500 → 500</button>
+      <button class="btn btn-gold" onclick="buyPackage(1000)">⭐ 1000 → 1000</button>
+      <button class="btn btn-gold" onclick="buyPackage(5000)">⭐ 5000 → 5000</button>
     </div>
-    <button class="btn btn-gold btn-full" onclick="doTopUp()">💳 Пополнить</button>
+
+    <div id="topUpResult" style="margin-top:15px;"></div>
   </div>
 
   <div class="screen" id="screenWithdraw">
@@ -550,7 +598,7 @@
 
   <div class="screen" id="screenAdmin">
     <div class="screen-title">🛡 Админ-панель</div>
-    <div class="menu-grid" style="grid-template-columns: 1fr;">
+    <div class="menu-grid-2" style="grid-template-columns: 1fr;">
       <button class="btn btn-success" onclick="adminAddBalance()">💰 Пополнить чужой баланс</button>
       <button class="btn btn-danger" onclick="adminRemoveBalance()">❌ Списать чужие звёзды</button>
       <button class="btn" onclick="adminViewBalance()">👁 Посмотреть чужой баланс</button>
@@ -566,7 +614,7 @@
 
   <div class="screen" id="screenOwner">
     <div class="screen-title">👑 Панель владельца</div>
-    <div class="menu-grid" style="grid-template-columns: 1fr;">
+    <div class="menu-grid-2" style="grid-template-columns: 1fr;">
       <button class="btn btn-success" onclick="ownerAddAdmin()">➕ Добавить админа</button>
       <button class="btn btn-danger" onclick="ownerRemoveAdmin()">➖ Удалить админа</button>
       <button class="btn btn-gold" onclick="ownerBroadcast()">📣 Рассылка</button>
@@ -625,12 +673,11 @@
 // АДРЕС API БОТА — ЗАМЕНИ НА СВОЙ
 // ============================================================
 const API_URL = "http://127.0.0.1:8080";
-// const API_URL = "https://api.твой-домен.ru";  // на VPS
+// const API_URL = "https://api.твой-домен.ru";
 
-// ============================================================
-// РОЛИ (получаются с бота, здесь только дефолт)
-// ============================================================
 let currentRole = 'user';
+let OWNER_IDS_LOCAL = [];
+let ADMIN_IDS_LOCAL = [];
 
 function roleBadge(role) {
   if (role === 'owner') return '<span class="role-badge role-owner">👑 Владелец</span>';
@@ -653,6 +700,7 @@ const state = {
   history: [],
   currentGame: null,
   selectedChoice: null,
+  isPlaying: false,
 };
 
 const allUsers = {
@@ -675,6 +723,8 @@ const GAMES = {
   slot_machine:{ emoji: '🎰', name: 'Слоты',          max: 64, hasChoice: false },
   duel:        { emoji: '🎲', name: 'Дуэль с ботом',  max: 6,  hasChoice: false },
 };
+
+const FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
 const promos = {
   HELLO2026: { amount: 100, uses: 100 },
@@ -824,16 +874,21 @@ function openGame(key) {
 
   state.currentGame = key;
   state.selectedChoice = null;
+  state.isPlaying = false;
 
   document.getElementById('gameTitle').textContent = g.emoji + ' ' + g.name;
   const dice = document.getElementById('diceDisplay');
-  dice.textContent = g.emoji;
-  dice.className = 'dice-display';
+  dice.innerHTML = `<span class="big-value">${g.emoji}</span><span class="hint">Готов к игре</span>`;
   document.getElementById('betInput').value = '';
+
   const rb = document.getElementById('resultBox');
   rb.className = 'result';
   rb.textContent = '';
   rb.style.display = 'none';
+
+  const playBtn = document.getElementById('playBtn');
+  playBtn.disabled = false;
+  playBtn.textContent = '🎲 Играть';
 
   const choiceRow = document.getElementById('choiceRow');
   if (g.hasChoice) {
@@ -855,68 +910,99 @@ function selectChoice(c) {
   document.getElementById('choiceB').classList.toggle('selected', c === 'B');
 }
 
+// ============================================================
+// АНИМАЦИЯ КУБИКА С ЗАМЕДЛЕНИЕМ
+// ============================================================
+function animateDice(callback, duration = 2000) {
+  const dice = document.getElementById('diceDisplay');
+  let startTime = Date.now();
+  let lastChange = 0;
+  let faceIndex = 0;
+
+  function frame() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Замедление: чем ближе к концу, тем реже меняются значения
+    const interval = 50 + progress * 400;
+
+    if (elapsed - lastChange >= interval) {
+      lastChange = elapsed;
+      dice.innerHTML = `<span class="big-value">${FACES[faceIndex % 6]}</span><span class="hint">Крутится...</span>`;
+      faceIndex++;
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      callback();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// ============================================================
+// ИГРА
+// ============================================================
 function play() {
-  if (!state.currentGame) return;
+  if (!state.currentGame || state.isPlaying) return;
+
+  const playBtn = document.getElementById('playBtn');
   const g = GAMES[state.currentGame];
   const bet = parseInt(document.getElementById('betInput').value);
 
+  // Валидация
   if (!bet || bet < 10) { showToast('❌ Минимум 10 ⭐', 'error'); return; }
   if (bet > state.balance) { showToast('❌ Недостаточно средств', 'error'); return; }
   if (g.hasChoice && !state.selectedChoice) { showToast('❌ Выбери вариант', 'error'); return; }
 
+  // Блокируем
+  state.isPlaying = true;
+  playBtn.disabled = true;
+  playBtn.textContent = '⏳ Играем...';
+
   const dice = document.getElementById('diceDisplay');
-  dice.className = 'dice-display rolling';
+  const rb = document.getElementById('resultBox');
+  rb.className = 'result';
+  rb.textContent = '';
+  rb.style.display = 'none';
 
+  // ============ ДУЭЛЬ ============
   if (state.currentGame === 'duel') {
-    const p = Math.floor(Math.random() * 6) + 1;
-    const b = Math.floor(Math.random() * 6) + 1;
+    animateDice(() => {
+      const p = Math.floor(Math.random() * 6) + 1;
+      const b = Math.floor(Math.random() * 6) + 1;
 
-    let c = 0;
-    const iv = setInterval(() => {
-      dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][c % 6];
-      c++;
-    }, 100);
-
-    setTimeout(() => {
-      clearInterval(iv);
-      dice.className = 'dice-display';
-      dice.textContent = '🧑 ' + p + ' — ' + b + ' 🤖';
+      dice.innerHTML = `
+        <span class="big-value">${FACES[p - 1]} ${FACES[b - 1]}</span>
+        <span class="hint">🧑 Ты: ${p} | 🤖 Бот: ${b}</span>
+      `;
 
       let type, text;
       if (p > b) {
         state.balance += bet; state.wins++;
-        type = 'win'; text = `✅ Победа! +${bet} ⭐`;
+        type = 'win';
+        text = `✅ <b>Победа!</b><br>🧑 ${p} vs 🤖 ${b}<br>+${bet} ⭐`;
       } else if (p < b) {
         state.balance -= bet; state.losses++;
-        type = 'lose'; text = `❌ Проигрыш. -${bet} ⭐`;
+        type = 'lose';
+        text = `❌ <b>Проигрыш.</b><br>🧑 ${p} vs 🤖 ${b}<br>-${bet} ⭐`;
       } else {
-        type = 'draw'; text = '🤝 Ничья! Ставка возвращена';
+        type = 'draw';
+        text = `🤝 <b>Ничья!</b><br>🧑 ${p} vs 🤖 ${b}<br>Ставка возвращена`;
       }
       showResult(type, text);
-      addHistory(`⚔️ Дуэль`, bet, type);
+      addHistory(`⚔️ Дуэль (${p} vs ${b})`, bet, type);
       state.gamesPlayed++;
       updateUI();
-    }, 1500);
+      unlockPlayButton();
+    }, 2200);
     return;
   }
 
+  // ============ ОБЫЧНЫЕ ИГРЫ ============
   const result = Math.floor(Math.random() * g.max) + 1;
 
-  let c = 0;
-  const iv = setInterval(() => {
-    if (g.max <= 6) {
-      dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][c % 6];
-    } else {
-      dice.textContent = g.emoji;
-    }
-    c++;
-  }, 100);
-
-  setTimeout(() => {
-    clearInterval(iv);
-    dice.className = 'dice-display';
-    dice.textContent = g.emoji;
-
+  animateDice(() => {
     let win = false, draw = false, label = '';
 
     if (state.currentGame === 'even_odd') {
@@ -936,23 +1022,50 @@ function play() {
       win = Math.random() < 0.30;
     }
 
+    // Показываем точное значение
+    if (g.max <= 6) {
+      dice.innerHTML = `
+        <span class="big-value">${FACES[result - 1]}</span>
+        <span class="hint">Выпало: <b style="color:#f5d742;font-size:18px;">${result}</b></span>
+      `;
+    } else {
+      dice.innerHTML = `
+        <span class="big-value">${g.emoji}</span>
+        <span class="hint">Выпало: <b style="color:#f5d742;font-size:18px;">${result}</b></span>
+      `;
+    }
+
     let type, text;
     if (draw) {
-      type = 'draw'; text = `🤝 Ничья! Выпало ${result}`;
+      type = 'draw';
+      text = `🤝 <b>Ничья!</b><br>Выпало: <b>${result}</b> (ровно 3)<br>Ставка возвращена`;
     } else if (win) {
       state.balance += bet; state.wins++;
       type = 'win';
-      text = `${g.hasChoice ? label + ', в' : 'В'}ыпало ${result}<br>✅ +${bet} ⭐`;
+      text = g.hasChoice
+        ? `✅ <b>Победа!</b><br>Ты: ${label}, выпало: <b>${result}</b><br>+${bet} ⭐`
+        : `✅ <b>Победа!</b><br>Выпало: <b>${result}</b><br>+${bet} ⭐`;
     } else {
       state.balance -= bet; state.losses++;
       type = 'lose';
-      text = `${g.hasChoice ? label + ', в' : 'В'}ыпало ${result}<br>❌ -${bet} ⭐`;
+      text = g.hasChoice
+        ? `❌ <b>Проигрыш.</b><br>Ты: ${label}, выпало: <b>${result}</b><br>-${bet} ⭐`
+        : `❌ <b>Проигрыш.</b><br>Выпало: <b>${result}</b><br>-${bet} ⭐`;
     }
+
     showResult(type, text);
-    addHistory(`${g.emoji} ${g.name}`, bet, type);
+    addHistory(`${g.emoji} ${g.name} (${result})`, bet, type);
     state.gamesPlayed++;
     updateUI();
-  }, 1500);
+    unlockPlayButton();
+  }, 2000);
+}
+
+function unlockPlayButton() {
+  state.isPlaying = false;
+  const playBtn = document.getElementById('playBtn');
+  playBtn.disabled = false;
+  playBtn.textContent = '🎲 Играть';
 }
 
 function showResult(type, html) {
@@ -968,17 +1081,51 @@ function addHistory(name, bet, type) {
 }
 
 // ============================================================
-// ПОПОЛНЕНИЕ / ВЫВОД
+// ПОПОЛНЕНИЕ ЧЕРЕЗ TELEGRAM STARS
 // ============================================================
-function doTopUp() {
-  const amt = parseInt(document.getElementById('topUpInput').value);
-  if (!amt || amt < 10) { showToast('❌ Минимум 10 ⭐', 'error'); return; }
-  state.balance += amt;
-  updateUI();
-  document.getElementById('topUpInput').value = '';
-  showToast(`✅ Пополнено на ${amt} ⭐`, 'success');
+function buyPackage(amount) {
+  const res = document.getElementById('topUpResult');
+  res.innerHTML = '<div class="result draw">⏳ Создаём счёт...</div>';
+
+  if (!window.Telegram || !window.Telegram.WebApp) {
+    res.innerHTML = '<div class="result lose">❌ Оплата доступна только внутри Telegram/StaticGram. Открой казино через бота.</div>';
+    return;
+  }
+
+  const tg = window.Telegram.WebApp;
+
+  fetch(`${API_URL}/api/invoice?user_id=${currentUserId}&amount=${amount}`)
+    .then(response => response.json())
+    .then(data => {
+      if (!data.ok || !data.invoice_link) {
+        res.innerHTML = `<div class="result lose">❌ Ошибка: ${data.error || 'не удалось создать счёт'}</div>`;
+        return;
+      }
+
+      tg.openInvoice(data.invoice_link, (status) => {
+        if (status === 'paid') {
+          state.balance += amount;
+          updateUI();
+          res.innerHTML = `<div class="result win">✅ Оплачено! +${amount} ⭐</div>`;
+          showToast(`✅ Баланс пополнен на ${amount} ⭐`, 'success');
+        } else if (status === 'cancelled') {
+          res.innerHTML = '<div class="result lose">❌ Оплата отменена</div>';
+        } else if (status === 'failed') {
+          res.innerHTML = '<div class="result lose">❌ Ошибка оплаты</div>';
+        } else {
+          res.innerHTML = '<div class="result draw">⏳ Ожидание оплаты...</div>';
+        }
+      });
+    })
+    .catch(err => {
+      console.error('Ошибка:', err);
+      res.innerHTML = '<div class="result lose">❌ Не удалось связаться с ботом</div>';
+    });
 }
 
+// ============================================================
+// ВЫВОД
+// ============================================================
 function doWithdraw() {
   const amt = parseInt(document.getElementById('withdrawInput').value);
   const res = document.getElementById('withdrawResult');
@@ -1211,9 +1358,6 @@ function adminStaffList() {
 // ============================================================
 // ПАНЕЛЬ ВЛАДЕЛЬЦА
 // ============================================================
-let OWNER_IDS_LOCAL = [];
-let ADMIN_IDS_LOCAL = [];
-
 function ownerAddAdmin() {
   if (currentRole !== 'owner') { showToast('⛔ Только владелец', 'error'); return; }
   openModalInput('➕ Добавить админа', 'Введи ID нового админа', '123456789', (val) => {
@@ -1297,25 +1441,20 @@ async function init() {
   currentUserId = parseInt(userIdFromUrl);
   console.log('ID игрока:', currentUserId);
 
-  // Запрос роли у бота
   try {
     const res = await fetch(`${API_URL}/api/role?user_id=${currentUserId}`);
     const data = await res.json();
-
     if (data.ok) {
       currentRole = data.role;
       console.log('Роль от бота:', currentRole);
-      showToast(`👋 Ты вошёл как ${currentRole}`, 'success');
     } else {
       currentRole = 'user';
     }
   } catch (err) {
     console.error('API недоступен:', err);
     currentRole = 'user';
-    showToast('⚠️ API бота недоступен. Роль: user', 'error');
   }
 
-  // Загружаем списки владельцев и админов с бота
   try {
     const [ownersRes, adminsRes] = await Promise.all([
       fetch(`${API_URL}/api/owners`),
@@ -1333,7 +1472,6 @@ async function init() {
     allUsers[currentUserId] = { username: 'user' + currentUserId, balance: 1000 };
   }
 
-  // Показ вкладок по роли
   if (currentRole === 'admin' || currentRole === 'owner') {
     document.getElementById('tabAdmin').classList.remove('hidden');
   }
